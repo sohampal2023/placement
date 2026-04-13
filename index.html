@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Placement System | Autonomous Evaluation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans overflow-hidden">
+
+    <nav class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-blue-400">AI-Placement v1.0</h1>
+        <div id="proctor-status" class="text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full">
+            Proctoring Active
+        </div>
+    </nav>
+
+    <main class="flex h-[calc(100vh-64px)]">
+        <aside class="w-1/4 p-4 border-r border-gray-700 flex flex-col gap-4">
+            <div class="relative rounded-lg overflow-hidden bg-black aspect-video border-2 border-blue-500">
+                <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
+                <canvas id="output_canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-sm font-semibold mb-2 text-gray-400">Violation Log</h3>
+                <ul id="log" class="text-xs space-y-1 text-red-400"></ul>
+            </div>
+        </aside>
+
+        <section class="flex-1 p-8 overflow-y-auto">
+            <div id="stage-test" class="block">
+                <h2 class="text-2xl font-bold mb-4">Technical Assessment</h2>
+                <div id="question-container" class="space-y-6">
+                    <div class="bg-gray-800 p-6 rounded-xl">
+                        <p class="text-lg mb-4">Q1: Which of the following is true about Virtual Functions in C++?</p>
+                        <div class="space-y-2">
+                            <label class="block p-3 border border-gray-600 rounded cursor-pointer hover:bg-gray-700">
+                                <input type="radio" name="q1" class="mr-2"> They ensure late binding
+                            </label>
+                            <label class="block p-3 border border-gray-600 rounded cursor-pointer hover:bg-gray-700">
+                                <input type="radio" name="q1" class="mr-2"> They are static functions
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="startInterview()" class="mt-6 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-bold transition">
+                    Submit & Start AI Interview
+                </button>
+            </div>
+
+            <div id="stage-interview" class="hidden">
+                <h2 class="text-2xl font-bold mb-4 text-purple-400">AI Technical Interview</h2>
+                <div id="chat-box" class="h-96 bg-gray-800 rounded-xl p-4 overflow-y-auto mb-4 space-y-4">
+                    <div class="bg-blue-900/50 p-3 rounded-lg self-start max-w-[80%]">
+                        AI: Based on your test, you're strong in C++. Can you explain the difference between a shallow copy and a deep copy?
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <input id="user-input" type="text" class="flex-1 bg-gray-700 border-none rounded p-3 focus:ring-2 focus:ring-purple-500" placeholder="Type your answer...">
+                    <button onclick="sendAnswer()" class="bg-purple-600 px-6 py-2 rounded font-bold">Send</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Proctoring Logic
+        const videoElement = document.getElementById('webcam');
+        const logElement = document.getElementById('log');
+        let violations = 0;
+
+        // Detect Tab Switching
+        window.onblur = function() {
+            violations++;
+            const li = document.createElement('li');
+            li.innerText = `[${new Date().toLocaleTimeString()}] Tab Switch Detected!`;
+            logElement.appendChild(li);
+            if(violations >= 3) alert("CRITICAL WARNING: Multiple tab switches detected.");
+        };
+
+        // 2. Face Detection (Simplified)
+        function onResults(results) {
+            if (results.detections.length === 0) {
+                document.getElementById('proctor-status').innerText = "NO FACE DETECTED";
+                document.getElementById('proctor-status').className = "text-sm bg-red-900 text-red-300 px-3 py-1 rounded-full";
+            } else {
+                document.getElementById('proctor-status').innerText = "Proctoring Active";
+                document.getElementById('proctor-status').className = "text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full";
+            }
+        }
+
+        const faceDetection = new FaceDetection({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+        });
+        faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+        faceDetection.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => { await faceDetection.send({image: videoElement}); },
+            width: 640, height: 480
+        });
+        camera.start();
+
+        // 3. Navigation
+        function startInterview() {
+            document.getElementById('stage-test').classList.add('hidden');
+            document.getElementById('stage-interview').classList.remove('hidden');
+        }
+
+        function sendAnswer() {
+            const input = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            if(!input.value) return;
+
+            // Display User Message
+            chatBox.innerHTML += `<div class="bg-gray-700 p-3 rounded-lg self-end ml-auto max-w-[80%] text-right">${input.value}</div>`;
+            
+            // Simulate AI Response (In real project, this calls OpenAI API)
+            setTimeout(() => {
+                chatBox.innerHTML += `<div class="bg-blue-900/50 p-3 rounded-lg self-start max-w-[80%]">AI: Interesting point. How would that affect memory allocation in a multi-threaded environment?</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+
+            input.value = "";
+        }
+
+        // 4. Prevent Copy-Paste
+        document.addEventListener('copy', (e) => e.preventDefault());
+        document.addEventListener('paste', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
