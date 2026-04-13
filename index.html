@@ -3,132 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Placement System | Autonomous Evaluation</title>
+    <title>AI Placement System | Stream Selection</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
 </head>
 <body class="bg-gray-900 text-white font-sans overflow-hidden">
 
-    <nav class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-blue-400">AI-Placement v1.0</h1>
-        <div id="proctor-status" class="text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full">
-            Proctoring Active
+    <div id="setup-overlay" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-6">
+        <div class="max-w-md w-full bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-2xl text-center">
+            <h1 class="text-3xl font-bold text-blue-400 mb-2">Welcome, Student</h1>
+            <p class="text-gray-400 mb-8 text-sm">Select your branch to begin the AI-driven placement cycle.</p>
+            
+            <div class="grid grid-cols-1 gap-4 text-left">
+                <button onclick="initSystem('Computer Science')" class="w-full p-4 bg-gray-700 hover:bg-blue-600 rounded-xl transition-all border border-gray-600 flex items-center justify-between group">
+                    <div>
+                        <span class="block font-bold">Computer Science</span>
+                        <span class="text-xs text-gray-400 group-hover:text-blue-100">DS, Algorithms, OS</span>
+                    </div>
+                    <span class="text-2xl">💻</span>
+                </button>
+                <button onclick="initSystem('Electronics')" class="w-full p-4 bg-gray-700 hover:bg-green-600 rounded-xl transition-all border border-gray-600 flex items-center justify-between group">
+                    <div>
+                        <span class="block font-bold">Electronics</span>
+                        <span class="text-xs text-gray-400 group-hover:text-green-100">VLSI, Signals, IoT</span>
+                    </div>
+                    <span class="text-2xl">⚡</span>
+                </button>
+                <button onclick="initSystem('Mechanical')" class="w-full p-4 bg-gray-700 hover:bg-orange-600 rounded-xl transition-all border border-gray-600 flex items-center justify-between group">
+                    <div>
+                        <span class="block font-bold">Mechanical</span>
+                        <span class="text-xs text-gray-400 group-hover:text-orange-100">Thermodynamics, CAD</span>
+                    </div>
+                    <span class="text-2xl">⚙️</span>
+                </button>
+            </div>
+            <p class="mt-6 text-xs text-red-400 italic">Warning: Switching tabs during the test will trigger a flag.</p>
         </div>
+    </div>
+
+    <nav class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-bold text-blue-400">AI-Placement</h1>
+            <span id="current-stream" class="bg-gray-700 text-xs px-2 py-1 rounded text-gray-300"></span>
+        </div>
+        <div id="proctor-status" class="text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full">Proctoring Off</div>
     </nav>
 
     <main class="flex h-[calc(100vh-64px)]">
         <aside class="w-1/4 p-4 border-r border-gray-700 flex flex-col gap-4">
             <div class="relative rounded-lg overflow-hidden bg-black aspect-video border-2 border-blue-500">
                 <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
-                <canvas id="output_canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
             </div>
-            <div class="bg-gray-800 p-4 rounded-lg">
-                <h3 class="text-sm font-semibold mb-2 text-gray-400">Violation Log</h3>
-                <ul id="log" class="text-xs space-y-1 text-red-400"></ul>
+            <div class="bg-gray-800 p-4 rounded-lg flex-1">
+                <h3 class="text-sm font-semibold mb-2 text-gray-400">Security Logs</h3>
+                <ul id="log" class="text-[10px] space-y-1 text-red-400 font-mono"></ul>
             </div>
         </aside>
 
         <section class="flex-1 p-8 overflow-y-auto">
             <div id="stage-test" class="block">
-                <h2 class="text-2xl font-bold mb-4">Technical Assessment</h2>
-                <div id="question-container" class="space-y-6">
-                    <div class="bg-gray-800 p-6 rounded-xl">
-                        <p class="text-lg mb-4">Q1: Which of the following is true about Virtual Functions in C++?</p>
-                        <div class="space-y-2">
-                            <label class="block p-3 border border-gray-600 rounded cursor-pointer hover:bg-gray-700">
-                                <input type="radio" name="q1" class="mr-2"> They ensure late binding
-                            </label>
-                            <label class="block p-3 border border-gray-600 rounded cursor-pointer hover:bg-gray-700">
-                                <input type="radio" name="q1" class="mr-2"> They are static functions
-                            </label>
-                        </div>
+                <h2 id="test-title" class="text-2xl font-bold mb-4">Core Branch Test</h2>
+                <div id="question-area" class="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     </div>
-                </div>
-                <button onclick="startInterview()" class="mt-6 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-bold transition">
-                    Submit & Start AI Interview
+                <button onclick="startInterview()" class="mt-6 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-bold">
+                    Lock Answers & Enter Interview
                 </button>
             </div>
 
             <div id="stage-interview" class="hidden">
-                <h2 class="text-2xl font-bold mb-4 text-purple-400">AI Technical Interview</h2>
-                <div id="chat-box" class="h-96 bg-gray-800 rounded-xl p-4 overflow-y-auto mb-4 space-y-4">
-                    <div class="bg-blue-900/50 p-3 rounded-lg self-start max-w-[80%]">
-                        AI: Based on your test, you're strong in C++. Can you explain the difference between a shallow copy and a deep copy?
+                <h2 class="text-2xl font-bold mb-4 text-purple-400">AI Adaptive Interview</h2>
+                <div id="chat-box" class="h-80 bg-gray-800 rounded-xl p-4 overflow-y-auto mb-4 space-y-4 border border-gray-700">
+                    <div class="bg-blue-900/40 p-3 rounded-lg max-w-[80%]">
+                        AI: System Initialized. Analyzing your core branch performance...
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <input id="user-input" type="text" class="flex-1 bg-gray-700 border-none rounded p-3 focus:ring-2 focus:ring-purple-500" placeholder="Type your answer...">
-                    <button onclick="sendAnswer()" class="bg-purple-600 px-6 py-2 rounded font-bold">Send</button>
+                    <input id="user-input" type="text" class="flex-1 bg-gray-700 border border-gray-600 rounded p-3" placeholder="Explain your answer...">
+                    <button onclick="sendAnswer()" class="bg-purple-600 px-6 py-2 rounded font-bold hover:bg-purple-500">Submit</button>
                 </div>
             </div>
         </section>
     </main>
 
     <script>
-        // 1. Proctoring Logic
+        let selectedStream = "";
         const videoElement = document.getElementById('webcam');
         const logElement = document.getElementById('log');
-        let violations = 0;
 
-        // Detect Tab Switching
-        window.onblur = function() {
-            violations++;
-            const li = document.createElement('li');
-            li.innerText = `[${new Date().toLocaleTimeString()}] Tab Switch Detected!`;
-            logElement.appendChild(li);
-            if(violations >= 3) alert("CRITICAL WARNING: Multiple tab switches detected.");
+        const questions = {
+            "Computer Science": "Q1: Explain the time complexity of QuickSort in the worst-case scenario.",
+            "Electronics": "Q1: What is the primary difference between a BJT and a MOSFET?",
+            "Mechanical": "Q1: State the Second Law of Thermodynamics and its significance in engine design."
         };
 
-        // 2. Face Detection (Simplified)
-        function onResults(results) {
-            if (results.detections.length === 0) {
-                document.getElementById('proctor-status').innerText = "NO FACE DETECTED";
-                document.getElementById('proctor-status').className = "text-sm bg-red-900 text-red-300 px-3 py-1 rounded-full";
-            } else {
-                document.getElementById('proctor-status').innerText = "Proctoring Active";
-                document.getElementById('proctor-status').className = "text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full";
-            }
+        // Initialize System
+        function initSystem(stream) {
+            selectedStream = stream;
+            document.getElementById('setup-overlay').style.display = 'none';
+            document.getElementById('current-stream').innerText = stream;
+            document.getElementById('test-title').innerText = `${stream} Core Assessment`;
+            document.getElementById('question-area').innerText = questions[stream];
+            
+            // Trigger Fullscreen for strictness
+            document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen blocked"));
+            
+            startProctoring();
         }
 
-        const faceDetection = new FaceDetection({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
-        });
-        faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
-        faceDetection.onResults(onResults);
+        // Proctoring Logic
+        function startProctoring() {
+            const faceDetection = new FaceDetection({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+            });
+            faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+            faceDetection.onResults((results) => {
+                const status = document.getElementById('proctor-status');
+                if (results.detections.length === 0) {
+                    status.innerText = "WARNING: NO FACE";
+                    status.className = "text-sm bg-red-900 text-red-300 px-3 py-1 rounded-full";
+                } else {
+                    status.innerText = "Proctoring Active";
+                    status.className = "text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full";
+                }
+            });
 
-        const camera = new Camera(videoElement, {
-            onFrame: async () => { await faceDetection.send({image: videoElement}); },
-            width: 640, height: 480
-        });
-        camera.start();
+            const camera = new Camera(videoElement, {
+                onFrame: async () => { await faceDetection.send({image: videoElement}); },
+                width: 640, height: 480
+            });
+            camera.start();
+        }
 
-        // 3. Navigation
+        // Anti-Cheat
+        window.onblur = () => {
+            const li = document.createElement('li');
+            li.innerText = `[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH`;
+            logElement.appendChild(li);
+        };
+
+        // Interview Flow
         function startInterview() {
             document.getElementById('stage-test').classList.add('hidden');
             document.getElementById('stage-interview').classList.remove('hidden');
+            
+            const chatBox = document.getElementById('chat-box');
+            setTimeout(() => {
+                chatBox.innerHTML += `<div class="bg-blue-900/40 p-3 rounded-lg max-w-[80%]">AI: Since you are a ${selectedStream} student, let's dive deeper. Can you justify your answer to the technical question?</div>`;
+            }, 1000);
         }
 
         function sendAnswer() {
             const input = document.getElementById('user-input');
-            const chatBox = document.getElementById('chat-box');
             if(!input.value) return;
-
-            // Display User Message
-            chatBox.innerHTML += `<div class="bg-gray-700 p-3 rounded-lg self-end ml-auto max-w-[80%] text-right">${input.value}</div>`;
-            
-            // Simulate AI Response (In real project, this calls OpenAI API)
-            setTimeout(() => {
-                chatBox.innerHTML += `<div class="bg-blue-900/50 p-3 rounded-lg self-start max-w-[80%]">AI: Interesting point. How would that affect memory allocation in a multi-threaded environment?</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 1000);
-
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div class="bg-gray-700 p-3 rounded-lg ml-auto max-w-[80%] text-right">${input.value}</div>`;
             input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // 4. Prevent Copy-Paste
-        document.addEventListener('copy', (e) => e.preventDefault());
-        document.addEventListener('paste', (e) => e.preventDefault());
+        // Disable standard cheats
+        document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
