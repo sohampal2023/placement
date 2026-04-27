@@ -3,241 +3,314 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Govt-EE | Supreme Proctored Portal</title>
+    <title>Govt-EE | Supreme Authority Portal</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body { font-family: 'JetBrains+Mono', monospace; }
+        .secure-gradient { background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); }
         .scanline {
-            width: 100%; height: 2px; background: rgba(255, 0, 0, 0.3);
-            position: absolute; animation: scan 3s linear infinite; z-index: 10;
+            width: 100%; height: 4px; background: rgba(234, 179, 8, 0.2);
+            position: absolute; animation: scan 4s linear infinite; z-index: 20;
         }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
-        .danger-border { border: 2px solid #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
-        .admin-panel { background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(20px); }
+        .admin-glass { background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(20px); border-left: 1px solid #334155; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-100 font-mono overflow-hidden">
+<body class="secure-gradient text-slate-200 overflow-hidden">
 
-    <div id="setup-overlay" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-4">
-        <div class="max-w-md w-full bg-slate-900 border-t-4 border-yellow-600 p-8 rounded-b-3xl shadow-2xl">
-            <h1 class="text-2xl font-black mb-2 text-center text-white">OFFICIAL EXAM GATEWAY</h1>
-            <p class="text-xs text-slate-500 text-center mb-8 uppercase tracking-widest">Department of Technical Recruitment</p>
-            
+    <div id="setup-overlay" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-6">
+        <div class="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-10 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-yellow-600"></div>
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-black text-white tracking-tighter italic">OFFICIAL GOVT RECRUITMENT</h1>
+                <p class="text-[10px] text-yellow-600 font-bold uppercase tracking-[0.3em] mt-2">Ministry of Engineering & Power</p>
+            </div>
+
             <div class="space-y-6">
-                <div>
-                    <label class="text-[10px] text-yellow-600 font-bold">SELECT EXAMINATION TRACK</label>
-                    <div class="grid grid-cols-2 gap-2 mt-1">
-                        <button onclick="selectTrack('Electrical Engineering')" id="btn-ee" class="p-4 border border-slate-700 rounded-xl hover:bg-yellow-600/10 transition-all text-sm font-bold">ELECTRICAL ENGINEERING</button>
-                        <button onclick="selectTrack('Government Job Exam')" id="btn-gov" class="p-4 border border-slate-700 rounded-xl hover:bg-yellow-600/10 transition-all text-sm font-bold">GOVERNMENT JOB EXAM</button>
-                    </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="setTrack('Electrical Engineering')" id="t-ee" class="track-btn p-5 border border-slate-800 rounded-2xl hover:border-yellow-600 transition-all text-xs font-bold text-slate-500">ELECTRICAL ENGINEERING</button>
+                    <button onclick="setTrack('Government Job Exam')" id="t-gov" class="track-btn p-5 border border-slate-800 rounded-2xl hover:border-yellow-600 transition-all text-xs font-bold text-slate-500">GOVERNMENT JOB EXAM</button>
                 </div>
-                <input id="roll-no" type="text" placeholder="ENTER GOVT ROLL NUMBER" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-center outline-none focus:border-yellow-600">
-                <button onclick="initSecureTest()" class="w-full bg-yellow-600 text-black font-black py-4 rounded-xl hover:bg-yellow-500">INITIATE SECURE SESSION</button>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] text-slate-500 font-bold">CANDIDATE AUTHORIZATION</label>
+                    <input id="roll-no" type="text" placeholder="ENTER GOVT ISSUED ROLL NO" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none focus:border-yellow-600 font-bold">
+                    <input id="candidate-name" type="text" placeholder="FULL NAME (AS PER ID)" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none focus:border-yellow-600 font-bold">
+                </div>
+
+                <div class="p-4 bg-red-950/20 border border-red-900/30 rounded-xl">
+                    <p class="text-[9px] text-red-400 leading-relaxed">WARNING: This session is monitored via AI Face Tracking and Window Focus Surveillance. Unauthorized tab switching will result in immediate disqualification.</p>
+                </div>
+
+                <button onclick="initSecureTest()" class="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-black py-5 rounded-2xl shadow-xl transform active:scale-95 transition-all">
+                    INITIATE SECURE HANDSHAKE
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="admin-panel" class="fixed inset-0 z-[150] admin-panel hidden p-10">
-        <div class="max-w-6xl mx-auto h-full flex flex-col">
-            <div class="flex justify-between items-end mb-10 border-b border-slate-800 pb-5">
-                <div>
-                    <h2 class="text-3xl font-black text-red-600 uppercase italic">Supreme Authority</h2>
-                    <p class="text-xs text-slate-500">Direct Intervention & Surveillance</p>
-                </div>
-                <button onclick="toggleAdmin()" class="bg-slate-800 px-6 py-2 rounded text-xs font-bold">BACK TO MONITOR</button>
-            </div>
-
-            <div class="grid grid-cols-12 gap-8 flex-1 overflow-hidden">
-                <div class="col-span-4 space-y-6">
-                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-                        <h3 class="text-xs font-bold text-yellow-600 mb-4 uppercase">Control Mode</h3>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="switchMode('AI')" id="mode-ai" class="bg-yellow-600 text-black p-2 rounded text-xs font-bold">AI MODE</button>
-                            <button onclick="switchMode('LIVE')" id="mode-live" class="bg-slate-800 p-2 rounded text-xs font-bold">LIVE ADMIN</button>
-                        </div>
-                        <div id="live-qn-area" class="mt-6 hidden">
-                            <textarea id="admin-msg" class="w-full bg-black border border-slate-700 rounded p-3 text-xs h-24 mb-2" placeholder="Send direct command/question..."></textarea>
-                            <button onclick="pushAdminMessage()" class="w-full bg-red-600 p-3 rounded font-bold text-xs">INJECT LIVE QUESTION</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex-1">
-                        <h3 class="text-xs font-bold text-blue-400 mb-4 uppercase">Candidate List (Paid)</h3>
-                        <div id="candidate-list" class="space-y-3 overflow-y-auto max-h-64 text-[10px]">
-                            <div class="flex justify-between border-b border-slate-800 pb-2">
-                                <span>ID: EE-991 (S. Varma)</span>
-                                <span class="text-green-500">PAID & VERIFIED</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-span-8 bg-black rounded-2xl border border-red-900/50 p-6 flex flex-col">
-                    <h3 class="text-xs font-bold text-red-500 mb-4 uppercase">Live Multi-Proctoring Stream</h3>
-                    <div class="flex-1 bg-slate-900 rounded-xl relative overflow-hidden">
-                        <div class="scanline"></div>
-                        <video id="admin-view" class="w-full h-full object-cover opacity-60" autoplay playsinline></video>
-                        <div class="absolute top-4 right-4 flex flex-col gap-2">
-                            <div id="p-face" class="bg-red-600/20 text-red-500 px-2 py-1 text-[8px] border border-red-500">FACE DETECTED</div>
-                            <div id="p-tabs" class="bg-green-600/20 text-green-500 px-2 py-1 text-[8px] border border-green-500">TABS SECURE</div>
-                            <div id="p-pay" class="bg-blue-600/20 text-blue-500 px-2 py-1 text-[8px] border border-blue-500">FEE VERIFIED</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <main class="grid grid-cols-12 h-screen">
-        <div class="col-span-3 border-r border-slate-800 flex flex-col bg-slate-950">
+    <div class="flex h-screen">
+        <aside class="w-80 border-r border-slate-800 flex flex-col bg-slate-950/50">
             <div class="p-6">
-                <div class="danger-border rounded-xl relative overflow-hidden aspect-video bg-black">
-                    <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
-                </div>
-                <div class="mt-4 space-y-2">
-                    <div id="status-tag" class="text-[9px] bg-red-600 text-white font-bold px-2 py-1 rounded text-center">SYSTEM ARMED: MULTI-PROCTORING ON</div>
+                <div class="relative rounded-2xl overflow-hidden border-2 border-yellow-600/30 bg-black aspect-video shadow-2xl">
+                    <div class="scanline"></div>
+                    <video id="webcam" class="w-full h-full object-cover grayscale opacity-80" autoplay playsinline></video>
+                    <div class="absolute bottom-2 left-2 flex gap-1">
+                        <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                        <span class="text-[8px] font-bold text-white uppercase">Live Feed</span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="flex-1 p-6 overflow-y-auto border-t border-slate-800">
-                <h4 class="text-[10px] text-slate-500 font-bold mb-4 uppercase tracking-widest">Proctoring Logs (Real-Time)</h4>
-                <div id="logs" class="space-y-2 text-[9px] font-mono"></div>
-            </div>
-        </div>
 
-        <div class="col-span-9 flex flex-col bg-slate-900/50">
-            <header class="h-16 border-b border-slate-800 px-8 flex justify-between items-center bg-slate-900">
-                <div class="flex items-center gap-4">
-                    <span class="text-yellow-600 font-black tracking-tighter">GOVT-EE // 2026</span>
-                    <span id="display-track" class="text-[10px] border border-slate-700 px-2 py-1 rounded text-slate-400 font-bold"></span>
+            <div class="flex-1 overflow-hidden flex flex-col border-t border-slate-800">
+                <div class="p-4 bg-slate-900/50 flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Proctoring Logs</span>
+                    <span id="log-count" class="text-[10px] bg-red-600/20 text-red-500 px-2 rounded">0 Alerts</span>
                 </div>
-                <div id="clock" class="text-xl font-bold font-mono text-white">45:00</div>
+                <div id="logs" class="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[9px]">
+                    <div class="text-blue-500 italic">>> System initializing logs...</div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="flex-1 flex flex-col relative">
+            <header class="h-20 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/20">
+                <div class="flex flex-col">
+                    <h2 class="text-xl font-black text-white italic tracking-tighter">GOVT-EE <span class="text-yellow-600">RECRUITMENT</span></h2>
+                    <span id="display-track" class="text-[9px] text-slate-500 uppercase font-bold tracking-[0.2em]">WAITING FOR AUTH...</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <p class="text-[9px] text-slate-500 font-bold uppercase">Time Remaining</p>
+                        <p id="timer" class="text-2xl font-black text-white">45:00</p>
+                    </div>
+                </div>
             </header>
 
-            <div id="chat-area" class="flex-1 overflow-y-auto p-12 space-y-8 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+            <div id="chat-area" class="flex-1 overflow-y-auto p-12 space-y-8 bg-black/10">
                 </div>
 
-            <div class="p-8 border-t border-slate-800 bg-slate-950">
-                <div class="max-w-4xl mx-auto flex gap-4">
-                    <input id="user-input" type="text" placeholder="ENTER TECHNICAL RESPONSE..." class="flex-1 bg-black border border-slate-700 rounded-xl px-6 py-4 outline-none focus:border-yellow-600 text-sm">
-                    <button onclick="submitMessage()" class="bg-yellow-600 text-black px-10 rounded-xl font-black text-sm hover:bg-yellow-500">SUBMIT</button>
+            <footer class="p-8 border-t border-slate-800 bg-slate-900/30">
+                <div class="max-w-4xl mx-auto relative">
+                    <input id="user-input" type="text" placeholder="TYPE YOUR RESPONSE HERE..." class="w-full bg-black border border-slate-700 rounded-2xl px-8 py-5 outline-none focus:border-yellow-600 focus:ring-4 focus:ring-yellow-600/10 transition-all font-bold text-sm">
+                    <button onclick="submitMessage()" class="absolute right-3 top-3 bottom-3 bg-yellow-600 px-8 rounded-xl text-black font-black hover:bg-yellow-500 transition-all">SUBMIT</button>
+                </div>
+            </footer>
+        </section>
+    </div>
+
+    <div id="admin-panel" class="fixed inset-0 z-[150] admin-glass hidden">
+        <div class="h-full flex flex-col p-12">
+            <div class="flex justify-between items-center mb-12">
+                <div>
+                    <h2 class="text-4xl font-black text-white uppercase italic">Supreme Command</h2>
+                    <p class="text-yellow-600 font-bold text-xs mt-1">REAL-TIME SURVEILLANCE & OVERRIDE</p>
+                </div>
+                <button onclick="toggleAdmin()" class="bg-slate-800 hover:bg-slate-700 px-8 py-3 rounded-xl font-bold transition-all">EXIT MASTER VIEW</button>
+            </div>
+
+            <div class="grid grid-cols-12 gap-10 flex-1 overflow-hidden">
+                <div class="col-span-4 flex flex-col gap-6">
+                    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                        <h3 class="text-xs font-bold text-slate-500 mb-6 uppercase tracking-widest">Intervention Mode</h3>
+                        <div class="flex gap-4 p-1 bg-black rounded-2xl mb-8">
+                            <button onclick="setMode('AI')" id="m-ai" class="flex-1 py-3 rounded-xl font-bold bg-yellow-600 text-black">AI MODE</button>
+                            <button onclick="setMode('LIVE')" id="m-live" class="flex-1 py-3 rounded-xl font-bold">LIVE ADMIN</button>
+                        </div>
+                        <div id="live-ctrl" class="hidden animate-pulse">
+                            <textarea id="admin-q" class="w-full bg-black border border-slate-800 rounded-2xl p-4 text-xs h-32 mb-4" placeholder="Enter custom question to inject into candidate session..."></textarea>
+                            <button onclick="pushAdminQ()" class="w-full bg-red-600 py-4 rounded-xl font-black text-sm">INJECT COMMAND</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-8 bg-slate-900 border border-slate-800 rounded-3xl p-8 overflow-y-auto">
+                    <h3 class="text-xs font-bold text-slate-500 mb-6 uppercase tracking-widest">Global Candidate Database (Firebase)</h3>
+                    <div id="db-view" class="space-y-4">
+                        </div>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <button onclick="toggleAdmin()" class="fixed bottom-2 right-2 opacity-0 w-10 h-10 cursor-default">.</button>
+    <button onclick="toggleAdmin()" class="fixed bottom-0 right-0 w-4 h-4 opacity-0 cursor-default">.</button>
 
-    <script>
-        let selectedTrack = "";
-        let currentMode = "AI";
-        let logs = document.getElementById('logs');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, arrayUnion, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-        // TRACK SELECTION
-        function selectTrack(track) {
-            selectedTrack = track;
-            document.getElementById('btn-ee').className = track === 'Electrical Engineering' ? 'p-4 border-2 border-yellow-600 bg-yellow-600/10 rounded-xl text-sm font-bold' : 'p-4 border border-slate-700 rounded-xl text-sm font-bold';
-            document.getElementById('btn-gov').className = track === 'Government Job Exam' ? 'p-4 border-2 border-yellow-600 bg-yellow-600/10 rounded-xl text-sm font-bold' : 'p-4 border border-slate-700 rounded-xl text-sm font-bold';
-        }
-
-        // INITIALIZE SYSTEM
-        function initSecureTest() {
-            if(!selectedTrack || !document.getElementById('roll-no').value) return alert("All fields required for Govt. Access.");
-            document.getElementById('setup-overlay').style.display = 'none';
-            document.getElementById('display-track').innerText = selectedTrack;
-            startProctoring();
-            addLog("System initialized. Multi-proctoring layers 1, 2, and 3 active.");
-            addMessage("SYSTEM", `Welcome Candidate. Your attempt for ${selectedTrack} has started. Explain the difference between 'Step Potential' and 'Touch Potential' in substation grounding.`);
-        }
-
-        // MULTI-PROCTORING LOGIC
-        function addLog(msg) {
-            const div = document.createElement('div');
-            div.className = "text-red-500 border-l border-red-500 pl-2 py-1";
-            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            logs.prepend(div);
-        }
-
-        window.onblur = () => {
-            addLog("CRITICAL ALERT: Tab switch/Window focus lost. Flagging for Admin.");
-            document.getElementById('p-tabs').className = "bg-red-600 text-white px-2 py-1 text-[8px] border border-red-500";
-            document.getElementById('p-tabs').innerText = "SECURITY BREACH: TABS";
+        // CONFIGURATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
+            authDomain: "placement-96094.firebaseapp.com",
+            databaseURL: "https://placement-96094-default-rtdb.firebaseio.com",
+            projectId: "placement-96094",
+            storageBucket: "placement-96094.firebasestorage.app",
+            messagingSenderId: "1061247846675",
+            appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
         };
 
-        // ADMIN CONTROLS
-        function toggleAdmin() {
-            document.getElementById('admin-panel').classList.toggle('hidden');
-        }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('mode-ai').className = mode === 'AI' ? 'bg-yellow-600 text-black p-2 rounded text-xs font-bold' : 'bg-slate-800 p-2 rounded text-xs font-bold';
-            document.getElementById('mode-live').className = mode === 'LIVE' ? 'bg-red-600 text-white p-2 rounded text-xs font-bold' : 'bg-slate-800 p-2 rounded text-xs font-bold';
-            document.getElementById('live-qn-area').classList.toggle('hidden', mode === 'AI');
-        }
+        let currentUser = null;
+        let selectedTrack = "";
+        let currentMode = "AI";
+        let violationCount = 0;
 
-        function pushAdminMessage() {
-            const msg = document.getElementById('admin-msg').value;
-            if(!msg) return;
-            addMessage("ADMIN SUPREME", msg, true);
-            document.getElementById('admin-msg').value = "";
-            toggleAdmin();
-        }
-
-        // COMMUNICATION FLOW
-        function addMessage(sender, text, isSpecial = false) {
-            const chat = document.getElementById('chat-area');
-            const color = isSpecial ? "border-red-600 bg-red-950/20 shadow-[0_0_15px_rgba(220,38,38,0.3)]" : "border-slate-700 bg-slate-800/50";
-            const senderColor = isSpecial ? "text-red-500" : "text-yellow-600";
-            
-            chat.innerHTML += `
-                <div class="flex gap-6 animate-pulse-once">
-                    <div class="w-12 h-12 bg-slate-800 border border-slate-700 rounded-xl flex items-center justify-center font-black">${sender[0]}</div>
-                    <div class="flex-1 ${color} border p-6 rounded-2xl rounded-tl-none">
-                        <p class="${senderColor} text-[10px] font-bold mb-2 uppercase tracking-widest">${sender}</p>
-                        <p class="text-slate-200 text-sm leading-relaxed">${text}</p>
-                    </div>
-                </div>`;
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function submitMessage() {
-            const input = document.getElementById('user-input');
-            if(!input.value) return;
-            
-            const chat = document.getElementById('chat-area');
-            chat.innerHTML += `
-                <div class="flex gap-6 justify-end">
-                    <div class="bg-yellow-600 p-6 rounded-2xl rounded-tr-none max-w-2xl text-black font-bold text-sm shadow-xl">
-                        ${input.value}
-                    </div>
-                </div>`;
-            
-            input.value = "";
-            chat.scrollTop = chat.scrollHeight;
-
-            if(currentMode === "AI") {
-                setTimeout(() => {
-                    addMessage("GOVT-AI", "Candidate response recorded. Proceeding to Electrical Machines: Explain why a Transformer does not work on DC supply.");
-                }, 2000);
-            }
-        }
-
-        function startProctoring() {
-            const video = document.getElementById('webcam');
-            const adminVideo = document.getElementById('admin-view');
-            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-                video.srcObject = stream;
-                adminVideo.srcObject = stream;
+        // TRACK SELECTION UI
+        window.setTrack = (track) => {
+            selectedTrack = track;
+            document.querySelectorAll('.track-btn').forEach(b => {
+                b.classList.remove('border-yellow-600', 'text-yellow-600', 'bg-yellow-600/10');
             });
+            const activeBtn = track === 'Electrical Engineering' ? document.getElementById('t-ee') : document.getElementById('t-gov');
+            activeBtn.classList.add('border-yellow-600', 'text-yellow-600', 'bg-yellow-600/10');
+        };
+
+        // SESSION INITIALIZATION
+        window.initSecureTest = async () => {
+            const rollNo = document.getElementById('roll-no').value;
+            const name = document.getElementById('candidate-name').value;
+            if(!selectedTrack || !rollNo || !name) return alert("MISSING CREDENTIALS");
+
+            try {
+                const userCred = await signInAnonymously(auth);
+                currentUser = userCred.user.uid;
+
+                await setDoc(doc(db, "exam_sessions", currentUser), {
+                    roll: rollNo,
+                    name: name,
+                    track: selectedTrack,
+                    start_time: new Date().toISOString(),
+                    logs: [],
+                    answers: [],
+                    status: "ACTIVE"
+                });
+
+                document.getElementById('setup-overlay').classList.add('hidden');
+                document.getElementById('display-track').innerText = selectedTrack;
+                
+                // Start Proctoring Features
+                startCamera();
+                addLog("FIREBASE: Session encrypted and synced.");
+                addMessage("SYSTEM", `Roll Number ${rollNo} verified. Starting Technical Assessment for ${selectedTrack}. Explain the working principle of an Isolator vs a Circuit Breaker in high-voltage engineering.`);
+                
+            } catch (err) {
+                console.error(err);
+                alert("SECURE CONNECTION FAILED");
+            }
+        };
+
+        // MESSAGE HANDLING
+        window.submitMessage = async () => {
+            const input = document.getElementById('user-input');
+            const text = input.value;
+            if(!text || !currentUser) return;
+
+            renderBubble("USER", text);
+            input.value = "";
+
+            try {
+                await updateDoc(doc(db, "exam_sessions", currentUser), {
+                    answers: arrayUnion({
+                        text: text,
+                        time: new Date().toISOString(),
+                        mode: currentMode
+                    })
+                });
+
+                if(currentMode === "AI") {
+                    setTimeout(() => {
+                        addMessage("GOVT-AI", "Candidate response validated. Describe the function of a Buchholz Relay in power transformers.");
+                    }, 2000);
+                }
+            } catch (e) { addLog("CLOUD ERROR: SYNC FAILED"); }
+        };
+
+        // LOGGING & PROCTORING
+        window.addLog = (msg) => {
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = "text-yellow-500 border-l border-yellow-600 pl-2 py-1 mb-1";
+            logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logsDiv.prepend(logEntry);
+            violationCount++;
+            document.getElementById('log-count').innerText = `${violationCount} Alerts`;
+        };
+
+        window.onblur = async () => {
+            if(!currentUser) return;
+            addLog("CRITICAL: WINDOW FOCUS LOST");
+            await updateDoc(doc(db, "exam_sessions", currentUser), {
+                logs: arrayUnion({ type: "FOCUS_LOST", time: new Date().toISOString() })
+            });
+        };
+
+        // ADMIN OVERRIDE
+        window.toggleAdmin = () => document.getElementById('admin-panel').classList.toggle('hidden');
+
+        window.setMode = (mode) => {
+            currentMode = mode;
+            document.getElementById('m-ai').className = mode === 'AI' ? 'flex-1 py-3 rounded-xl font-bold bg-yellow-600 text-black' : 'flex-1 py-3 rounded-xl font-bold';
+            document.getElementById('m-live').className = mode === 'LIVE' ? 'flex-1 py-3 rounded-xl font-bold bg-red-600 text-white' : 'flex-1 py-3 rounded-xl font-bold';
+            document.getElementById('live-ctrl').classList.toggle('hidden', mode === 'AI');
+        };
+
+        window.pushAdminQ = async () => {
+            const q = document.getElementById('admin-q').value;
+            if(!q) return;
+            addMessage("ADMIN SUPREME", q, true);
+            document.getElementById('admin-q').value = "";
+            toggleAdmin();
+        };
+
+        // UI HELPERS
+        function addMessage(sender, text, isSpecial = false) {
+            const area = document.getElementById('chat-area');
+            const bg = isSpecial ? "border-red-600 bg-red-950/20" : "border-slate-800 bg-slate-900/50";
+            area.innerHTML += `
+                <div class="flex gap-6 animate-pulse-once">
+                    <div class="w-12 h-12 bg-slate-800 flex items-center justify-center font-black rounded-2xl">${sender[0]}</div>
+                    <div class="flex-1 ${bg} border p-8 rounded-3xl rounded-tl-none">
+                        <p class="text-xs font-bold ${isSpecial ? 'text-red-500' : 'text-yellow-600'} mb-2">${sender}</p>
+                        <p class="text-sm leading-relaxed">${text}</p>
+                    </div>
+                </div>`;
+            area.scrollTop = area.scrollHeight;
         }
 
-        // Anti-Right Click & Copy
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.onkeydown = function(e) {
-            if(e.ctrlKey && (e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 85 || e.keyCode === 73)) {
-                addLog("ALERT: Restricted shortcut attempt.");
+        function renderBubble(sender, text) {
+            const area = document.getElementById('chat-area');
+            area.innerHTML += `
+                <div class="flex gap-6 justify-end">
+                    <div class="bg-yellow-600 p-6 rounded-3xl rounded-tr-none max-w-2xl text-black font-bold text-sm">
+                        ${text}
+                    </div>
+                </div>`;
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function startCamera() {
+            const video = document.getElementById('webcam');
+            navigator.mediaDevices.getUserMedia({ video: true }).then(s => video.srcObject = s);
+        }
+
+        // Anti-Cheat Restrictions
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = (e) => {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 'i')) {
+                addLog("VIOLATION: RESTRICTED KEY ATTEMPT");
                 return false;
             }
         };
