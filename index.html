@@ -373,6 +373,29 @@ function initSecurityProtocol() {
 
     setInterval(forceFS, 3000); // Re-prompt FS every 3 seconds if exited
 }
+        // --- CANDIDATE: REAL-TIME COMMAND LISTENER ---
+function startGlobalListener() {
+    let lastProcessedQn = 0;
+
+    // Listen to the Session Document for Live Pushes
+    onSnapshot(doc(db, "sessions", userUID), (snap) => {
+        const data = snap.data();
+        
+        // Handle Admin Direct Intervention (Live Mode)
+        if (data.liveInjectedQuestion && data.liveInjectedQuestion.timestamp > lastProcessedQn) {
+            appendChatBubble("SUPREME ADMIN", data.liveInjectedQuestion.text);
+            lastProcessedQn = data.liveInjectedQuestion.timestamp;
+            // Play an alert sound for the candidate
+            new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+        }
+
+        // Handle Disqualification
+        if (data.override === true) {
+            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20%; font-family:sans-serif;'>SESSION REVOKED BY ADMIN</h1>";
+            setTimeout(() => location.reload(), 5000);
+        }
+    });
+}
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = (e) => { if(e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 'i')) return false; };
     </script>
