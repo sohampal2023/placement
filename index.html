@@ -285,21 +285,6 @@
             });
         }
 
-        // --- SURVEILLANCE & ANTI-CHEAT ---
-        function initCamera() {
-            const feed = document.getElementById('web-feed');
-            navigator.mediaDevices.getUserMedia({video: true}).then(s => feed.srcObject = s);
-            
-            window.onblur = async () => {
-                document.getElementById('video-wrap').classList.add('secure-violation');
-                alertsCount++;
-                document.getElementById('violation-count').innerText = `${alertsCount} ALERTS`;
-                document.getElementById('proctor-logs').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH DETECTED</div>`;
-                await updateDoc(doc(db, "sessions", userUID), { violations: arrayUnion("FOCUS_LOSS_" + new Date().toISOString()) });
-            };
-            window.onfocus = () => document.getElementById('video-wrap').classList.remove('secure-violation');
-        }
-
         function appendChatBubble(sender, msg) {
             const interact = document.getElementById('interaction-box');
             interact.innerHTML += `<div class="flex justify-start animate-in slide-in-from-left duration-500"><div class="bg-slate-900 border-l-8 border-yellow-600 p-10 rounded-[2.5rem] rounded-tl-none max-w-2xl shadow-2xl"><p class="text-[10px] font-black text-yellow-600 mb-2 uppercase">${sender}</p><p class="text-sm leading-relaxed">${msg}</p></div></div>`;
@@ -311,7 +296,83 @@
             interact.innerHTML += `<div class="flex justify-end animate-in slide-in-from-right duration-500"><div class="bg-yellow-500 p-10 rounded-[2.5rem] rounded-tr-none max-w-2xl text-black font-black text-sm shadow-xl">${msg}</div></div>`;
             interact.scrollTop = interact.scrollHeight;
         }
+        // --- ADMIN: GLOBAL MODE SWITCHER ---
+window.toggleSystemMode = async (mode) => {
+    // mode can be 'AI' or 'LIVE'
+    const configRef = doc(db, "config", "engine");
+    await setDoc(configRef, { 
+        activeMode: mode, 
+        lastUpdate: new Date().getTime() 
+    }, { merge: true });
+    
+    alert(`SYSTEM RECONFIGURED: ${mode} MODE ACTIVE`);
+};
 
+// --- ADMIN: LIVE QUESTION INJECTION ---
+window.pushLiveQuestion = async (targetUID) => {
+    const qnText = document.getElementById('live-qn-input').value;
+    if(!targetUID || !qnText) return alert("Missing Target or Content");
+
+    await updateDoc(doc(db, "sessions", targetUID), {
+        liveInjectedQuestion: {
+            text: qnText,
+            timestamp: new Date().getTime(),
+            sender: "SUPREME_COMMAND"
+        }
+    });
+    document.getElementById('live-qn-input').value = ""; // Clear input
+};
+        // --- CANDIDATE: IRON-CLAD SECURITY ---
+function initSecurityProtocol() {
+    const portal = document.documentElement;
+
+    // 1. Force Fullscreen on Start
+    const forceFS = () => {
+        if (!document.fullscreenElement) {
+            portal.requestFullscreen().catch(() => {
+                appendChatBubble("SECURITY", "CRITICAL: Fullscreen is required to continue.");
+            });
+        }
+    };
+
+    // 2. Multi-Layer Violation Detection
+    const logViolation = async (severity, reason) => {
+        alertsCount++;
+        document.getElementById('violation-count').innerText = `${alertsCount} ALERTS`;
+        document.getElementById('video-wrap').classList.add('secure-violation');
+        
+        // Log to Firebase Surveillance Matrix
+        await updateDoc(doc(db, "sessions", userUID), {
+            violations: arrayUnion({
+                type: severity,
+                reason: reason,
+                timestamp: new Date().toISOString()
+            }),
+            status: alertsCount > 3 ? "HIGH_RISK" : "ONLINE"
+        });
+
+        if(alertsCount > 10) {
+            alert("SESSION TERMINATED: Maximum violations exceeded.");
+            location.reload(); 
+        }
+    };
+
+    window.onresize = () => {
+        if (window.outerWidth - window.innerWidth > 100) logViolation("WARNING", "DEVTOOLS_DETECTED");
+    };
+    
+    // Disable Copy/Paste/Right-Click
+    document.addEventListener('copy', e => { e.preventDefault(); logViolation("MODERATE", "COPY_ATTEMPT"); });
+    document.addEventListener('paste', e => e.preventDefault());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    // Continuous Fullscreen Check
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) logViolation("CRITICAL", "EXITED_FULLSCREEN");
+    });
+
+    setInterval(forceFS, 3000); // Re-prompt FS every 3 seconds if exited
+}
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = (e) => { if(e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 'i')) return false; };
     </script>
