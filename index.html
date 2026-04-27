@@ -151,51 +151,49 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
-            authDomain: "placement-96094.firebaseapp.com",
-            projectId: "placement-96094",
-            storageBucket: "placement-96094.firebasestorage.app",
-            messagingSenderId: "1061247846675",
-            appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        let userUID = null;
-        let activeTargetUID = null;
-        let alertsCount = 0;
-
-        // --- AUTH & ADMIN CORE ---
-        // --- LOCATION: window.launchAdmin ---
+       // --- PINNED LOCATION: Top of Script Imports ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { 
+    getAuth, 
+    signInAnonymously, 
+    signInWithEmailAndPassword // ADD THIS
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, // ADD THIS
+    updateDoc, 
+    onSnapshot, 
+    arrayUnion, 
+    collection 
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        // --- PINNED LOCATION: window.launchAdmin ---
 window.launchAdmin = async () => {
-    const email = document.getElementById('adm-user').value;
+    const email = document.getElementById('adm-user').value.trim();
     const password = document.getElementById('adm-key').value;
-    const allowed = ["admin@admin.com", "admin@portal.com"]; // Security whitelist
-
-    if(!allowed.includes(email)) {
-        alert("CRITICAL: Email not in Supreme Whitelist.");
-        return;
-    }
+    
+    // Check if fields are empty
+    if(!email || !password) return alert("Please enter both Email and Security Key.");
 
     try {
-        // This actually checks against your Firebase Auth Database
+        // Attempt actual Firebase Authentication
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
-        // If successful, show the dashboard
+        // Success Logic
         document.getElementById('gate-overlay').classList.add('hidden');
         document.getElementById('admin-hub').classList.remove('hidden');
         syncSurveillanceMatrix();
-        console.log("Supreme Authority Verified:", userCredential.user.uid);
+        
+        console.log("Supreme Admin Authenticated:", userCredential.user.email);
     } catch (error) {
-        console.error("Auth Error:", error.code);
-        alert("ACCESS DENIED: Firebase credentials invalid or User does not exist.");
+        console.error("Auth Error Code:", error.code);
+        // Common error handling
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            alert("ACCESS DENIED: Invalid Supreme Credentials. Check Firebase Authentication tab.");
+        } else {
+            alert("SYSTEM ERROR: " + error.message);
+        }
     }
 };
         window.launchCandidate = async () => {
@@ -218,6 +216,8 @@ window.launchAdmin = async () => {
 
                 initCamera();
                 initExamEngine();
+                initSecurityProtocol(); // CALL THE SECURITY SUITE
+                startGlobalListener();
                 listenForSupremeOverride();
             } catch (err) {
                 console.error(err);
