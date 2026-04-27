@@ -1,182 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RecruitPro | Live Firebase Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#0b0e14] text-white font-sans">
-
-    <div id="authOverlay" class="fixed inset-0 bg-[#0b0e14] z-[100] flex flex-col justify-center items-center p-6">
-        <div class="bg-[#161b22] p-8 rounded-2xl border border-slate-800 w-full max-w-md shadow-2xl">
-            <h2 class="text-2xl font-bold mb-6 text-center">RecruitPro Login</h2>
-            <input id="adminPass" type="password" placeholder="Enter Admin Password" class="w-full bg-[#0d1117] border border-slate-700 rounded-xl p-4 mb-4 outline-none focus:border-cyan-500">
-            <button onclick="checkAuth()" class="w-full py-4 bg-cyan-600 rounded-xl font-bold hover:bg-cyan-500 transition">Enter Control Panel</button>
-            <p class="text-slate-500 text-xs mt-4 text-center">Direct access via Firebase: placement-96094</p>
+<body>
+    <nav>
+        <h2>Admin Panel</h2>
+        <button onclick="logout()">Logout</button>
+    </nav>
+    <main>
+        <div class="stats">
+            <div class="card">Students Enrolled: <span id="studentCount">0</span></div>
+            <div class="card">Avg. Performance: <span id="avgScore">0%</span></div>
         </div>
-    </div>
 
-    <div id="mainDashboard" class="hidden">
-        <header class="border-b border-slate-800 bg-[#161b22]/50 sticky top-0 backdrop-blur-md p-4">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <h1 class="text-xl font-black text-cyan-400 tracking-tighter">RECRUITPRO <span class="text-slate-500 font-normal">v2.0</span></h1>
-                <div class="flex gap-4 items-center">
-                    <span class="text-[10px] bg-green-500/10 text-green-500 px-2 py-1 rounded border border-green-500/20 font-bold uppercase">Cloud Active</span>
-                    <button onclick="location.reload()" class="text-xs text-slate-500 hover:text-white transition">Sign Out</button>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto p-6 grid lg:grid-cols-3 gap-8">
-            
-            <div class="lg:col-span-2 bg-[#161b22] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-                <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-                    <h3 class="font-bold">Enrolled Students</h3>
-                    <span id="studentCount" class="bg-cyan-500/10 text-cyan-500 text-xs px-2 py-1 rounded">0 Total</span>
-                </div>
-                <div class="overflow-x-auto max-h-[600px]">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-[#0d1117] text-slate-500 text-[10px] uppercase tracking-widest">
-                            <tr>
-                                <th class="p-4">Name</th>
-                                <th class="p-4">Email</th>
-                                <th class="p-4">Status</th>
-                                <th class="p-4 text-right">Database ID</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentList" class="divide-y divide-slate-800">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <div class="bg-[#161b22] p-6 rounded-2xl border border-slate-800 shadow-lg">
-                    <h3 class="font-bold mb-1 italic">Real Question Bank</h3>
-                    <p class="text-[10px] text-slate-500 mb-4">Upload .txt (Format: Q | A)</p>
-                    
-                    <div class="space-y-3">
-                        <textarea id="rawQuestions" placeholder="Question 1 | Answer 1&#10;Question 2 | Answer 2" class="w-full h-32 bg-[#0d1117] border border-slate-700 rounded-xl p-3 text-xs outline-none focus:border-purple-500 font-mono"></textarea>
-                        <button onclick="uploadQuestions()" class="w-full py-3 bg-purple-600 rounded-xl font-bold hover:bg-purple-500 transition shadow-lg shadow-purple-900/20">Sync Bank to Cloud</button>
-                    </div>
-                </div>
-
-                <div class="bg-[#161b22] p-6 rounded-2xl border border-slate-800 shadow-lg">
-                    <h3 class="font-bold mb-4">Live Test Schedule</h3>
-                    <div class="space-y-4">
-                        <input id="tName" type="text" placeholder="Exam Title" class="w-full bg-[#0d1117] border border-slate-700 rounded-xl p-3 text-sm outline-none focus:border-cyan-500">
-                        <input id="tDate" type="datetime-local" class="w-full bg-[#0d1117] border border-slate-700 rounded-xl p-3 text-sm outline-none">
-                        <button onclick="broadcastTest()" class="w-full py-3 bg-cyan-600 rounded-xl font-bold hover:bg-cyan-500 transition shadow-lg shadow-cyan-900/20">Broadcast Test</button>
-                    </div>
-                </div>
-
-                <div class="bg-[#161b22] p-6 rounded-2xl border border-slate-800 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-bold">AI Interviewer</span>
-                        <button id="aiBtn" onclick="toggleAI()" class="px-4 py-1 rounded-full bg-slate-700 text-[10px] font-bold">OFF</button>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
-            authDomain: "placement-96094.firebaseapp.com",
-            databaseURL: "https://placement-96094-default-rtdb.firebaseio.com",
-            projectId: "placement-96094",
-            storageBucket: "placement-96094.firebasestorage.app",
-            messagingSenderId: "1061247846675",
-            appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // AUTHENTICATION LOGIC
-        window.checkAuth = () => {
-            const pass = document.getElementById('adminPass').value;
-            if(pass === "Admin@123") {
-                document.getElementById('authOverlay').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                initSystem();
-            } else {
-                alert("Wrong Password");
-            }
-        };
-
-        function initSystem() {
-            // 1. Live Student Feed
-            onValue(ref(db, 'students'), (snap) => {
-                const list = document.getElementById('studentList');
-                const count = document.getElementById('studentCount');
-                list.innerHTML = "";
-                const data = snap.val();
-                if(data) {
-                    const entries = Object.entries(data);
-                    count.innerText = entries.length + " Enrolled";
-                    entries.forEach(([id, s]) => {
-                        list.innerHTML += `
-                            <tr class="hover:bg-slate-800/20 transition">
-                                <td class="p-4 font-bold text-slate-200">${s.name || 'User'}</td>
-                                <td class="p-4 text-slate-400 font-mono text-xs">${s.email}</td>
-                                <td class="p-4"><span class="text-[10px] text-green-400">● Live</span></td>
-                                <td class="p-4 text-right text-slate-600 text-[10px] font-mono">${id.slice(-6)}</td>
-                            </tr>`;
-                    });
-                }
-            });
-
-            // 2. Question Bank Upload
-            window.uploadQuestions = () => {
-                const raw = document.getElementById('rawQuestions').value;
-                const lines = raw.split('\n').filter(l => l.includes('|'));
-                const bank = lines.map(l => {
-                    const [q, a] = l.split('|');
-                    return { q: q.trim(), a: a.trim() };
-                });
-                
-                set(ref(db, 'question_bank'), bank).then(() => {
-                    alert("Sync Successful! " + bank.length + " questions pushed to cloud.");
-                    document.getElementById('rawQuestions').value = "";
-                });
-            };
-
-            // 3. Test Broadcast
-            window.broadcastTest = () => {
-                const name = document.getElementById('tName').value;
-                const date = document.getElementById('tDate').value;
-                if(!name || !date) return alert("Fill all fields");
-
-                update(ref(db, 'current_test'), {
-                    title: name,
-                    startTime: date,
-                    active: true
-                }).then(() => alert("Broadcasted to all students!"));
-            };
-
-            // 4. AI Interview Toggle
-            let aiState = false;
-            window.toggleAI = () => {
-                aiState = !aiState;
-                update(ref(db, 'settings'), { aiMode: aiState });
-            };
-
-            onValue(ref(db, 'settings/aiMode'), (snap) => {
-                const btn = document.getElementById('aiBtn');
-                const state = snap.val();
-                btn.innerText = state ? "ON" : "OFF";
-                btn.className = state 
-                    ? "px-4 py-1 rounded-full bg-green-600 text-[10px] font-bold shadow-lg shadow-green-900/20" 
-                    : "px-4 py-1 rounded-full bg-slate-700 text-[10px] font-bold";
-            });
-        }
-    </script>
+        <section>
+            <h3>Manage Question Banks</h3>
+            <button>Appti Bank</button>
+            <button>Common Test Bank</button>
+            <button>AI Mode Interview Bank</button>
+        </section>
+    </main>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
