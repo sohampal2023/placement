@@ -1,223 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RecruitPro CBT Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-slate-950 text-white font-sans">
-
-  <!-- Navbar -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-      <h1 class="text-2xl font-bold text-cyan-400">RecruitPro Portal</h1>
-      <nav class="space-x-6 hidden md:flex">
+  <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-extrabold text-cyan-400">RecruitPro CBT Portal</h1>
+      <nav class="hidden md:flex gap-5 text-sm text-slate-200">
         <a href="#home" class="hover:text-cyan-400">Home</a>
-        <a href="#features" class="hover:text-cyan-400">Features</a>
-        <a href="#exams" class="hover:text-cyan-400">Mock Tests</a>
+        <a href="#student" class="hover:text-cyan-400">Student</a>
+        <a href="#admin" class="hover:text-cyan-400">Admin</a>
+        <a href="#exam" class="hover:text-cyan-400">Exam</a>
+        <a href="#results" class="hover:text-cyan-400">Results</a>
         <a href="#interview" class="hover:text-cyan-400">Interview</a>
-        <a href="#contact" class="hover:text-cyan-400">Contact</a>
       </nav>
-      <div class="space-x-3">
-        <button onclick="showLogin()" class="px-4 py-2 bg-cyan-500 rounded-xl hover:bg-cyan-600">Login</button>
-        <button onclick="showRegister()" class="px-4 py-2 bg-green-500 rounded-xl hover:bg-green-600">Register</button>
+      <div class="space-x-2">
+        <button onclick="showLogin()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600">Login</button>
+        <button onclick="showRegister()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600">Register</button>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section id="home" class="py-20 px-6 text-center bg-gradient-to-b from-slate-900 to-slate-950">
-    <h2 class="text-5xl font-extrabold mb-6">Complete Recruitment Mock Test Platform</h2>
-    <p class="text-slate-300 text-lg max-w-3xl mx-auto mb-8">
-      Practice MCQ exams, technical rounds, coding challenges, and HR interviews for SSC, Railway, GATE, TCS, Infosys, Wipro, and more.
-    </p>
-    <button class="px-8 py-4 bg-cyan-500 rounded-2xl text-lg font-semibold hover:bg-cyan-600">Start Mock Test</button>
-  </section>
-
-  <!-- Features -->
-  <section id="features" class="max-w-7xl mx-auto py-16 px-6">
-    <h3 class="text-4xl font-bold text-center mb-12 text-cyan-400">Platform Features</h3>
-    <div class="grid md:grid-cols-3 gap-8">
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h4 class="text-xl font-bold mb-4">Student Dashboard</h4>
-        <ul class="space-y-2 text-slate-300">
-          <li>• Live mock exams</li>
-          <li>• Performance analytics</li>
-          <li>• Subject progress tracking</li>
-          <li>• Leaderboard rankings</li>
-        </ul>
+  <main>
+    <section id="home" class="px-6 py-20 text-center bg-gradient-to-b from-slate-900 to-slate-950">
+      <h2 class="text-4xl md:text-5xl font-black mb-5">Recruitment + Placement + Mock Test + Interview Platform</h2>
+      <p class="max-w-3xl mx-auto text-slate-300 text-lg">Single-file project demo covering student dashboard, admin tools, timed mock exam engine, descriptive + MCQ workflow, leaderboard, analytics, and interview prep panels.</p>
+      <div class="mt-8 flex justify-center gap-4 flex-wrap">
+        <a href="#exam" class="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 font-semibold">Start Demo Exam</a>
+        <a href="#admin" class="px-6 py-3 rounded-xl bg-purple-500 hover:bg-purple-600 font-semibold">Open Admin View</a>
       </div>
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h4 class="text-xl font-bold mb-4">Admin Dashboard</h4>
-        <ul class="space-y-2 text-slate-300">
-          <li>• Create/manage exams</li>
-          <li>• Bulk question upload</li>
-          <li>• Student monitoring</li>
-          <li>• Result export</li>
-        </ul>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 py-16">
+      <h3 class="text-3xl font-bold text-cyan-400 text-center mb-10">Core Features (Implemented in this single index.html)</h3>
+      <div class="grid md:grid-cols-3 gap-6">
+        <article class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+          <h4 class="font-bold text-xl mb-3">Student Side</h4>
+          <ul class="text-slate-300 space-y-1">
+            <li>• Dashboard cards</li>
+            <li>• Live exam timer</li>
+            <li>• MCQ + descriptive question</li>
+            <li>• Result + strengths/weak areas</li>
+            <li>• Leaderboard preview</li>
+          </ul>
+        </article>
+        <article class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+          <h4 class="font-bold text-xl mb-3">Admin Side</h4>
+          <ul class="text-slate-300 space-y-1">
+            <li>• KPI summary widgets</li>
+            <li>• Exam creation panel (demo)</li>
+            <li>• Question bank placeholder</li>
+            <li>• Export/report actions</li>
+            <li>• Live activity feed</li>
+          </ul>
+        </article>
+        <article class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+          <h4 class="font-bold text-xl mb-3">Security/Workflow</h4>
+          <ul class="text-slate-300 space-y-1">
+            <li>• Role-based demo login</li>
+            <li>• Auto submit on timer end</li>
+            <li>• Tab switch warning (visibility API)</li>
+            <li>• Local profile persistence</li>
+            <li>• Frontend-ready for Firebase/Node</li>
+          </ul>
+        </article>
       </div>
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h4 class="text-xl font-bold mb-4">Interview Preparation</h4>
-        <ul class="space-y-2 text-slate-300">
-          <li>• HR interview practice</li>
-          <li>• Technical viva</li>
-          <li>• Coding rounds</li>
-          <li>• AI interview simulator</li>
-        </ul>
+    </section>
+
+    <section id="student" class="max-w-7xl mx-auto px-6 py-16">
+      <h3 class="text-3xl font-bold text-cyan-400 mb-6">Student Dashboard</h3>
+      <div class="grid lg:grid-cols-4 gap-5">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5"><p class="text-slate-400">Upcoming Exams</p><h4 class="text-3xl font-bold">6</h4></div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5"><p class="text-slate-400">Completed</p><h4 class="text-3xl font-bold">24</h4></div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5"><p class="text-slate-400">Average Score</p><h4 class="text-3xl font-bold">84%</h4></div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5"><p class="text-slate-400">Leaderboard Rank</p><h4 class="text-3xl font-bold">#152</h4></div>
       </div>
-    </div>
-  </section>
-
-  <!-- Exams Section -->
-  <section id="exams" class="bg-slate-900 py-16 px-6">
-    <div class="max-w-7xl mx-auto">
-      <h3 class="text-4xl font-bold text-center mb-12 text-cyan-400">Popular Mock Exams</h3>
-      <div class="grid md:grid-cols-4 gap-6">
-        <div class="bg-slate-800 p-6 rounded-2xl text-center">SSC CHSL</div>
-        <div class="bg-slate-800 p-6 rounded-2xl text-center">Railway CBT</div>
-        <div class="bg-slate-800 p-6 rounded-2xl text-center">GATE Technical</div>
-        <div class="bg-slate-800 p-6 rounded-2xl text-center">Campus Placement</div>
+      <div class="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <h4 class="text-xl font-bold mb-4">Performance Analytics</h4>
+        <canvas id="performanceChart"></canvas>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Dashboard Preview -->
-  <section class="max-w-7xl mx-auto py-16 px-6">
-    <h3 class="text-4xl font-bold text-center mb-12 text-cyan-400">Performance Analytics</h3>
-    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-      <canvas id="performanceChart"></canvas>
-    </div>
-  </section>
+    <section id="admin" class="bg-slate-900 px-6 py-16">
+      <div class="max-w-7xl mx-auto">
+        <h3 class="text-3xl font-bold text-purple-400 mb-6">Admin Dashboard</h3>
+        <div class="grid md:grid-cols-4 gap-4 mb-6">
+          <div class="rounded-2xl p-5 bg-slate-800"><p class="text-slate-400">Students</p><h4 class="text-2xl font-bold">2,540</h4></div>
+          <div class="rounded-2xl p-5 bg-slate-800"><p class="text-slate-400">Active Exams</p><h4 class="text-2xl font-bold">18</h4></div>
+          <div class="rounded-2xl p-5 bg-slate-800"><p class="text-slate-400">Interviews</p><h4 class="text-2xl font-bold">640</h4></div>
+          <div class="rounded-2xl p-5 bg-slate-800"><p class="text-slate-400">Reports Exported</p><h4 class="text-2xl font-bold">123</h4></div>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="rounded-2xl p-6 bg-slate-800">
+            <h4 class="font-bold mb-3">Create Exam (Demo)</h4>
+            <div class="grid gap-3">
+              <input class="bg-slate-900 border border-slate-700 p-3 rounded" placeholder="Exam Title" />
+              <div class="grid grid-cols-2 gap-3">
+                <input class="bg-slate-900 border border-slate-700 p-3 rounded" placeholder="Duration (min)" />
+                <input class="bg-slate-900 border border-slate-700 p-3 rounded" placeholder="Total Marks" />
+              </div>
+              <button class="bg-cyan-500 hover:bg-cyan-600 py-3 rounded-xl">Save Exam</button>
+            </div>
+          </div>
+          <div class="rounded-2xl p-6 bg-slate-800">
+            <h4 class="font-bold mb-3">Live Activity</h4>
+            <ul class="text-slate-300 space-y-2 text-sm">
+              <li>• 12 students started Railway CBT at 10:00 AM</li>
+              <li>• 4 submissions received in Technical Round</li>
+              <li>• Interview schedule updated for Campus Drive</li>
+              <li>• New question set uploaded for Aptitude</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- Interview -->
-  <section id="interview" class="py-16 px-6 bg-slate-900">
-    <div class="max-w-7xl mx-auto text-center">
-      <h3 class="text-4xl font-bold mb-8 text-cyan-400">Mock Interview System</h3>
-      <p class="text-slate-300 mb-8 max-w-3xl mx-auto">
-        Practice HR questions, technical interviews, and company-specific placement rounds with structured feedback.
-      </p>
-      <button class="px-8 py-4 bg-purple-500 rounded-2xl hover:bg-purple-600">Start Interview Practice</button>
-    </div>
-  </section>
+    <section id="exam" class="max-w-7xl mx-auto px-6 py-16">
+      <h3 class="text-3xl font-bold text-cyan-400 mb-6">Live Mock Exam Engine</h3>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <p id="timer" class="text-amber-300 font-bold mb-3">Time Left: 05:00</p>
+          <h4 class="font-bold mb-2">Q1. Which data structure uses FIFO order?</h4>
+          <div class="space-y-2 mb-5">
+            <label class="block"><input type="radio" name="q1" value="Stack" class="mr-2" />Stack</label>
+            <label class="block"><input type="radio" name="q1" value="Queue" class="mr-2" />Queue</label>
+            <label class="block"><input type="radio" name="q1" value="Tree" class="mr-2" />Tree</label>
+            <label class="block"><input type="radio" name="q1" value="Graph" class="mr-2" />Graph</label>
+          </div>
+          <h4 class="font-bold mb-2">Q2. Descriptive: Explain one anti-cheat method for online exams.</h4>
+          <textarea id="descAnswer" rows="4" class="w-full p-3 rounded bg-slate-800 border border-slate-700" placeholder="Type your answer..."></textarea>
+          <button onclick="submitExam()" class="mt-5 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600">Submit Exam</button>
+        </div>
+        <aside class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h4 class="font-bold mb-3">Question Palette</h4>
+          <div class="grid grid-cols-5 gap-2 text-center text-sm">
+            <span class="bg-cyan-600 rounded py-2">1</span><span class="bg-slate-700 rounded py-2">2</span><span class="bg-slate-700 rounded py-2">3</span><span class="bg-slate-700 rounded py-2">4</span><span class="bg-slate-700 rounded py-2">5</span>
+          </div>
+          <p class="text-slate-400 mt-4 text-sm">Tab switch count: <span id="tabWarnCount">0</span></p>
+        </aside>
+      </div>
+    </section>
 
-  <!-- Login Modal -->
-  <div id="loginModal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-    <div class="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-slate-700">
-      <h3 class="text-2xl font-bold mb-2">Login</h3>
-      <p class="text-sm text-slate-400 mb-4">Secure role-based login with Firebase/Node backend integration required for production deployment.</p>
-      <input id="loginEmail" type="email" placeholder="Email" class="w-full mb-4 p-3 rounded bg-slate-800 border border-slate-700">
-      <input id="loginPassword" type="password" placeholder="Password" class="w-full mb-4 p-3 rounded bg-slate-800 border border-slate-700">
-      <button onclick="secureLogin()" class="w-full py-3 bg-cyan-500 rounded-xl hover:bg-cyan-600">Secure Login</button>
-      <button onclick="closeLogin()" class="w-full mt-3 py-2 bg-red-500 rounded-xl">Close</button>
-    </div>
-  </div>
+    <section id="results" class="max-w-7xl mx-auto px-6 py-16">
+      <h3 class="text-3xl font-bold text-cyan-400 mb-6">Result & Leaderboard</h3>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div id="resultCard" class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <p class="text-slate-400">Submit the exam to generate result.</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h4 class="font-bold mb-3">Top Performers</h4>
+          <ol class="text-slate-300 space-y-2 list-decimal list-inside">
+            <li>Aarav S. - 96%</li>
+            <li>Priya M. - 94%</li>
+            <li>Rohit K. - 92%</li>
+            <li>Demo Student - 84%</li>
+          </ol>
+        </div>
+      </div>
+    </section>
 
-  <!-- Register Modal -->
-  <div id="registerModal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-    <div class="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-slate-700">
-      <h3 class="text-2xl font-bold mb-6">Student Registration</h3>
-      <input id="registerName" type="text" placeholder="Full Name" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700">
-      <input id="registerEmail" type="email" placeholder="Email" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700">
-      <input id="registerPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700">
-      <button onclick="registerStudent()" class="w-full py-3 bg-green-500 rounded-xl hover:bg-green-600">Create Account</button>
-      <button onclick="closeRegister()" class="w-full mt-3 py-2 bg-red-500 rounded-xl">Close</button>
-    </div>
-  </div>
+    <section id="interview" class="bg-slate-900 px-6 py-16">
+      <div class="max-w-7xl mx-auto text-center">
+        <h3 class="text-3xl font-bold text-purple-400 mb-4">Interview Preparation Panel</h3>
+        <p class="text-slate-300 max-w-2xl mx-auto">Practice HR + technical interview rounds with structured rubrics, model answers, and company-specific question banks.</p>
+        <div class="mt-6 grid md:grid-cols-3 gap-4 text-left">
+          <div class="bg-slate-800 p-5 rounded-2xl"><h4 class="font-bold mb-2">HR Round</h4><p class="text-slate-300 text-sm">Tell me about yourself, strengths, gaps, and leadership examples.</p></div>
+          <div class="bg-slate-800 p-5 rounded-2xl"><h4 class="font-bold mb-2">Technical Round</h4><p class="text-slate-300 text-sm">DSA, DBMS, OS, CN, and domain-specific fundamentals.</p></div>
+          <div class="bg-slate-800 p-5 rounded-2xl"><h4 class="font-bold mb-2">Coding Round</h4><p class="text-slate-300 text-sm">Timed coding evaluation and output-based challenges.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-  <!-- Footer -->
-  <footer id="contact" class="bg-slate-950 border-t border-slate-800 py-8 text-center text-slate-400">
-    <p>© 2026 RecruitPro CBT Portal | Built for Recruitment, Placement & Competitive Exams</p>
+  <footer class="text-center text-slate-400 py-8 border-t border-slate-800">
+    © 2026 RecruitPro CBT Portal — Single file implementation for rapid demo/prototyping.
   </footer>
 
-  <!-- Student Dashboard -->
-  <section id="studentPortal" class="hidden max-w-7xl mx-auto py-16 px-6">
-    <h3 class="text-4xl font-bold text-cyan-400 mb-8 text-center">Student Dashboard</h3>
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h4 class="font-bold mb-4">Available Exams</h4>
-        <ul class="space-y-2 text-slate-300">
-          <li>• SSC Mock Test</li>
-          <li>• Railway CBT</li>
-          <li>• Technical Core Exam</li>
-          <li>• HR Interview Round</li>
-        </ul>
-      </div>
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h4 class="font-bold mb-4">Performance</h4>
-        <p class="text-slate-300">Average Score: 84%</p>
-        <p class="text-slate-300">National Rank: 152</p>
-        <p class="text-slate-300">Completed Exams: 24</p>
-      </div>
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-        <h4 class="font-bold mb-4">Quick Actions</h4>
-        <button class="w-full py-3 bg-cyan-500 rounded-xl mb-3">Start Mock Test</button>
-        <button class="w-full py-3 bg-purple-500 rounded-xl">Interview Practice</button>
-      </div>
+  <div id="loginModal" class="hidden fixed inset-0 bg-black/70 items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md">
+      <h3 class="font-bold text-2xl mb-1">Login</h3>
+      <p class="text-sm text-slate-400 mb-4">Demo credentials: <span class="text-cyan-300">admin@recruitpro.com / Admin@123</span> or <span class="text-cyan-300">student@recruitpro.com / Student@123</span>.</p>
+      <input id="loginEmail" type="email" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700" placeholder="Email" />
+      <input id="loginPassword" type="password" class="w-full mb-4 p-3 rounded bg-slate-800 border border-slate-700" placeholder="Password" />
+      <button onclick="secureLogin()" class="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600">Secure Login</button>
+      <button onclick="closeLogin()" class="w-full mt-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600">Close</button>
     </div>
-  </section>
+  </div>
 
-  <!-- Admin Dashboard -->
-  <section id="adminPortal" class="hidden max-w-7xl mx-auto py-16 px-6">
-    <h3 class="text-4xl font-bold text-purple-400 mb-8 text-center">Admin Dashboard</h3>
-    <div class="grid md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
-        <p class="text-slate-400">Students</p>
-        <h4 class="text-3xl font-bold">2,540</h4>
-      </div>
-      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
-        <p class="text-slate-400">Active Exams</p>
-        <h4 class="text-3xl font-bold">18</h4>
-      </div>
-      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
-        <p class="text-slate-400">Interviews</p>
-        <h4 class="text-3xl font-bold">640</h4>
-      </div>
-      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
-        <p class="text-slate-400">Revenue</p>
-        <h4 class="text-3xl font-bold">₹1.8L</h4>
-      </div>
+  <div id="registerModal" class="hidden fixed inset-0 bg-black/70 items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md">
+      <h3 class="font-bold text-2xl mb-4">Student Registration</h3>
+      <input id="registerName" type="text" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700" placeholder="Full Name" />
+      <input id="registerEmail" type="email" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700" placeholder="Email" />
+      <input id="registerPassword" type="password" class="w-full mb-4 p-3 rounded bg-slate-800 border border-slate-700" placeholder="Password" />
+      <button onclick="registerStudent()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600">Create Account</button>
+      <button onclick="closeRegister()" class="w-full mt-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600">Close</button>
     </div>
-    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-      <h4 class="text-2xl font-bold mb-4">Admin Controls</h4>
-      <div class="grid md:grid-cols-3 gap-4">
-        <button class="py-3 bg-cyan-500 rounded-xl">Create Exam</button>
-        <button class="py-3 bg-green-500 rounded-xl">Manage Students</button>
-        <button class="py-3 bg-purple-500 rounded-xl">View Reports</button>
-      </div>
-    </div>
-  </section>
+  </div>
 
   <script>
+    const loginModal = document.getElementById('loginModal');
+    const registerModal = document.getElementById('registerModal');
+    const resultCard = document.getElementById('resultCard');
+    const tabWarnCount = document.getElementById('tabWarnCount');
+
+    let secondsLeft = 300;
+    let examSubmitted = false;
+    let tabSwitches = 0;
+
     function showLogin() {
-      document.getElementById('loginModal').classList.remove('hidden');
+      loginModal.classList.remove('hidden');
+      loginModal.classList.add('flex');
     }
+
     function closeLogin() {
-      document.getElementById('loginModal').classList.add('hidden');
+      loginModal.classList.add('hidden');
+      loginModal.classList.remove('flex');
     }
+
     function showRegister() {
-      document.getElementById('registerModal').classList.remove('hidden');
+      registerModal.classList.remove('hidden');
+      registerModal.classList.add('flex');
     }
+
     function closeRegister() {
-      document.getElementById('registerModal').classList.add('hidden');
+      registerModal.classList.add('hidden');
+      registerModal.classList.remove('flex');
     }
 
     function secureLogin() {
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
-
       if (!email || !password) {
         alert('Please enter email and password.');
         return;
       }
-
+      closeLogin();
       if (email === 'admin@recruitpro.com' && password === 'Admin@123') {
-        loadAdminPortal();
+        alert('Admin login successful. Scrolling to Admin Dashboard.');
+        document.getElementById('admin').scrollIntoView({ behavior: 'smooth' });
       } else if (email === 'student@recruitpro.com' && password === 'Student@123') {
-        loadStudentPortal();
+        alert('Student login successful. Scrolling to Student Dashboard.');
+        document.getElementById('student').scrollIntoView({ behavior: 'smooth' });
       } else {
-        alert('Invalid credentials. Connect Firebase/Auth backend for real users.');
+        alert('Invalid demo credentials. Connect real Firebase/Node auth for production.');
       }
     }
 
@@ -225,61 +256,87 @@
       const name = document.getElementById('registerName').value.trim();
       const email = document.getElementById('registerEmail').value.trim();
       const password = document.getElementById('registerPassword').value.trim();
-
       if (!name || !email || !password) {
         alert('Please complete all fields.');
         return;
       }
-
       localStorage.setItem('recruitpro_student', JSON.stringify({ name, email }));
-      alert('Registration successful. You can now login as student.');
       closeRegister();
+      alert('Registration successful. Use student demo login to explore dashboard.');
     }
 
-    function loadStudentPortal() {
-      closeLogin();
-      document.getElementById('studentPortal').classList.remove('hidden');
-      document.getElementById('adminPortal').classList.add('hidden');
-      window.scrollTo({ top: document.getElementById('studentPortal').offsetTop, behavior: 'smooth' });
+    function updateTimerView() {
+      const min = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+      const sec = String(secondsLeft % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `Time Left: ${min}:${sec}`;
     }
 
-    function loadAdminPortal() {
-      closeLogin();
-      document.getElementById('adminPortal').classList.remove('hidden');
-      document.getElementById('studentPortal').classList.add('hidden');
-      window.scrollTo({ top: document.getElementById('adminPortal').offsetTop, behavior: 'smooth' });
+    function calculateScore() {
+      const q1 = document.querySelector('input[name="q1"]:checked')?.value;
+      const desc = document.getElementById('descAnswer').value.trim();
+      let score = 0;
+      if (q1 === 'Queue') score += 50;
+      if (desc.length >= 30) score += 50;
+      return score;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedStudent = localStorage.getItem('recruitpro_student');
-      if (savedStudent) {
-        console.log('Registered student profile loaded');
+    function submitExam(auto = false) {
+      if (examSubmitted) return;
+      examSubmitted = true;
+      const score = calculateScore();
+      const feedback = score >= 80 ? 'Strong attempt! Keep practicing coding rounds.' : 'Focus on concepts and write longer descriptive answers.';
+      resultCard.innerHTML = `
+        <h4 class="font-bold text-xl mb-3">Exam Result</h4>
+        <p class="mb-2">Score: <span class="text-cyan-300 font-bold">${score}/100</span></p>
+        <p class="mb-2">Estimated Percentile: <span class="text-cyan-300 font-bold">${Math.max(55, score)}%</span></p>
+        <p class="mb-2">Tab Switch Alerts: <span class="text-amber-300 font-bold">${tabSwitches}</span></p>
+        <p class="text-slate-300">${feedback}</p>
+        <p class="text-xs text-slate-500 mt-3">${auto ? 'Auto-submitted due to timer completion.' : 'Submitted manually.'}</p>
+      `;
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    setInterval(() => {
+      if (examSubmitted) return;
+      if (secondsLeft <= 0) {
+        submitExam(true);
+        return;
+      }
+      secondsLeft -= 1;
+      updateTimerView();
+    }, 1000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && !examSubmitted) {
+        tabSwitches += 1;
+        tabWarnCount.textContent = tabSwitches;
       }
     });
 
-    const ctx = document.getElementById('performanceChart');
-    new Chart(ctx, {
+    const chart = new Chart(document.getElementById('performanceChart'), {
       type: 'bar',
       data: {
         labels: ['Aptitude', 'Reasoning', 'Technical', 'Coding', 'Interview'],
         datasets: [{
           label: 'Performance %',
           data: [82, 75, 88, 70, 91],
-          borderWidth: 1
+          borderWidth: 1,
+          backgroundColor: ['#06b6d4', '#0ea5e9', '#8b5cf6', '#14b8a6', '#22c55e']
         }]
       },
       options: {
-        responsive: true,
-        plugins: {
-          legend: { labels: { color: 'white' } }
-        },
         scales: {
-          x: { ticks: { color: 'white' } },
-          y: { ticks: { color: 'white' }, beginAtZero: true, max: 100 }
-        }
+          x: { ticks: { color: '#e2e8f0' } },
+          y: { beginAtZero: true, max: 100, ticks: { color: '#e2e8f0' } }
+        },
+        plugins: { legend: { labels: { color: '#e2e8f0' } } }
       }
     });
-  </script>
 
+    const saved = JSON.parse(localStorage.getItem('recruitpro_student') || 'null');
+    if (saved?.name) {
+      console.log(`Welcome back, ${saved.name}`);
+    }
+  </script>
 </body>
 </html>
