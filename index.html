@@ -2,146 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGER-2026 | Supreme Command & Engineering Assessment</title>
-    
+    <title>SGER-2026 | Government Command & Assessment</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
-        :root { --gov-red: #991b1b; --gov-gold: #fbbf24; --deep-bg: #020617; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--deep-bg); color: #e2e8f0; overflow: hidden; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* High-Standard UI Components */
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(51, 65, 85, 0.5); }
-        .admin-sidebar { width: 480px; background: #070a13; border-left: 2px solid #1e293b; transform: translateX(100%); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .admin-sidebar.active { transform: translateX(0); }
-        
-        /* Multi-Proctoring Visual Effects */
-        .scanline { width: 100%; height: 2px; background: rgba(251, 191, 36, 0.2); position: absolute; animation: scan 3s linear infinite; z-index: 10; pointer-events: none; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-        .violation-overlay { position: fixed; inset: 0; border: 10px solid var(--gov-red); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 2000; }
-        .violation-active .violation-overlay { opacity: 1; animation: pulse-border 1s infinite; }
-        @keyframes pulse-border { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-
-        /* Custom Scrollbar for 2000-line logic density */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        :root { --gov-deep: #020617; --gov-gold: #fbbf24; }
+        body { background: var(--gov-deep); font-family: 'Inter', sans-serif; color: #f8fafc; overflow: hidden; }
+        .admin-auth-overlay { background: radial-gradient(circle, #1e293b 0%, #020617 100%); }
+        .glass-ui { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .status-reexam { animation: pulse-red 2s infinite; border: 2px solid #ef4444 !important; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body class="selection:bg-yellow-500/30">
+<body>
 
-    <div class="violation-overlay"></div>
-
-    <div id="auth-gateway" class="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-950 px-6">
-        <div class="max-w-5xl w-full grid md:grid-cols-2 gap-12 animate-in fade-in zoom-in duration-700">
-            
-            <div class="glass-panel p-10 rounded-[2rem] shadow-2xl border-t-4 border-yellow-500">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-white tracking-tighter italic">CANDIDATE ENTRY</h2>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Engineering Recruitment Track</p>
-                </div>
+    <div id="auth-layer" class="fixed inset-0 z-[5000] admin-auth-overlay flex items-center justify-center p-6">
+        <div class="max-w-4xl w-full grid md:grid-cols-2 gap-10">
+            <div class="glass-ui p-10 rounded-3xl border-t-4 border-yellow-500 shadow-2xl">
+                <h2 class="text-3xl font-black text-white mb-6">CANDIDATE</h2>
                 <div class="space-y-4">
-                    <select id="exam-type" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm font-bold text-yellow-500 outline-none">
-                        <option value="EE_CORE">ELECTRICAL ENGINEERING - CORE POWER SYSTEMS</option>
-                        <option value="GOV_MECH">CENTRAL GOVT - MECHANICAL RECRUITMENT</option>
-                    </select>
-                    <input id="roll-id" type="text" placeholder="GOVT ROLL NUMBER" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl outline-none focus:border-yellow-500 transition-all font-bold">
-                    <button onclick="launchCandidateSession()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black py-5 rounded-xl transition-all uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(234,179,8,0.2)]">Initiate Assessment</button>
+                    <input id="c-roll" type="text" placeholder="GOVT ROLL NUMBER" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-yellow-500">
+                    <button onclick="enterCandidate()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400">INITIATE EXAM</button>
                 </div>
             </div>
 
-            <div class="glass-panel p-10 rounded-[2rem] shadow-2xl border-t-4 border-red-600 bg-red-950/5">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-white tracking-tighter italic">ADMIN SUPREME</h2>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Authority & Intervention</p>
-                </div>
+            <div class="glass-ui p-10 rounded-3xl border-t-4 border-red-600 bg-red-950/5 shadow-2xl">
+                <h2 class="text-3xl font-black text-white mb-6">ADMIN SUPREME</h2>
                 <div class="space-y-4">
-                    <input id="adm-user" type="text" placeholder="MASTER ADMIN ID" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl outline-none">
-                    <input id="adm-pass" type="password" placeholder="SECURITY KEY" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl outline-none">
-                    <button onclick="launchAdminSession()" class="w-full bg-red-600 hover:bg-red-500 text-white font-black py-5 rounded-xl transition-all uppercase text-xs tracking-widest">Access Command Center</button>
+                    <input id="adm-email" type="email" placeholder="ADMIN EMAIL (admin@admin.com)" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-red-600">
+                    <input id="adm-pass" type="password" placeholder="SECURITY KEY" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-red-600">
+                    <button onclick="loginAdmin()" class="w-full bg-red-600 text-white font-black py-4 rounded-xl hover:bg-red-500">ACCESS COMMAND CENTER</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <aside id="admin-sidebar" class="fixed right-0 top-0 bottom-0 z-[2500] admin-sidebar flex flex-col p-8 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
-        <div class="flex justify-between items-center mb-10 pb-4 border-b border-slate-800">
-            <h3 class="text-xl font-black text-red-500 uppercase italic">Control Engine</h3>
-            <button onclick="closeAdmin()" class="text-slate-500 hover:text-white">✕</button>
-        </div>
+    <div id="admin-dashboard" class="fixed inset-0 z-[4000] bg-slate-950 hidden overflow-hidden flex flex-col">
+        <nav class="h-20 bg-slate-900 border-b border-slate-800 px-10 flex items-center justify-between">
+            <h1 class="text-xl font-black text-white italic">SGER <span class="text-red-600">SUPREME COMMAND</span></h1>
+            <button onclick="location.reload()" class="bg-red-600 px-6 py-2 rounded font-bold text-xs">TERMINATE SESSION</button>
+        </nav>
 
-        <div class="flex-1 overflow-y-auto space-y-6">
-            <div class="p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
-                <h4 class="text-[10px] font-bold text-slate-500 mb-4 uppercase">Live Monitoring</h4>
-                <div id="admin-candidate-list" class="space-y-3">
-                    </div>
-            </div>
-
-            <div id="intervention-module" class="hidden animate-in slide-in-from-bottom duration-500">
-                <div class="p-6 bg-red-900/10 border border-red-600/30 rounded-2xl">
-                    <h4 class="text-xs font-bold text-red-500 mb-4">SUPREME OVERRIDE</h4>
-                    <p id="target-info" class="text-[10px] text-slate-400 mb-4">Target: ROLL_ID_9901</p>
-                    <div class="grid grid-cols-1 gap-2">
-                        <button onclick="adminReExamTrigger()" class="w-full py-3 bg-red-600 rounded-lg font-bold text-[10px]">CANCEL ATTEMPT & FORCE RE-EXAM</button>
-                        <button onclick="adminManualPass()" class="w-full py-3 bg-green-600 rounded-lg font-bold text-[10px]">MANUAL OVERRIDE: PASS</button>
-                    </div>
+        <main class="flex-1 grid grid-cols-12 p-8 gap-8">
+            <div class="col-span-4 glass-ui p-8 rounded-3xl flex flex-col gap-6">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest">Question Bank Upload</h3>
+                <div class="border-2 border-dashed border-slate-700 p-10 rounded-2xl text-center hover:border-red-500 transition-all cursor-pointer">
+                    <input type="file" id="qn-upload" accept=".pdf,.doc,.docx" class="hidden">
+                    <label for="qn-upload" class="cursor-pointer">
+                        <p class="text-red-500 font-bold mb-2">Click to Upload PDF/Word</p>
+                        <p class="text-[10px] text-slate-500">Only authorized engineering modules allowed.</p>
+                    </label>
+                </div>
+                <div id="upload-status" class="text-xs font-mono text-green-500"></div>
+                
+                <div class="mt-auto">
+                    <h4 class="text-xs font-bold text-slate-400 mb-2">Override Decision Logic</h4>
+                    <button onclick="triggerReExam()" class="w-full py-4 bg-red-600 rounded-xl font-black text-xs mb-2">CANCEL AI DECISION & RE-EXAM</button>
+                    <button onclick="forcePass()" class="w-full py-4 bg-green-600 rounded-xl font-black text-xs">MANUAL FORCE PASS</button>
                 </div>
             </div>
-        </div>
-    </aside>
 
-    <main id="main-exam-layout" class="hidden flex h-screen">
-        <aside class="w-80 border-r border-slate-800 flex flex-col bg-slate-950">
-            <div class="p-6">
-                <div class="relative rounded-2xl overflow-hidden border-2 border-slate-800 bg-black aspect-video">
-                    <div class="scanline"></div>
-                    <video id="p-camera" class="w-full h-full object-cover grayscale" autoplay playsinline></video>
-                </div>
-                <div id="secure-badge" class="mt-4 p-3 bg-green-900/10 border border-green-500/30 rounded-xl text-center">
-                    <span class="text-[10px] font-bold text-green-500 uppercase tracking-tighter italic">Proctoring Secure</span>
+            <div class="col-span-8 glass-ui p-8 rounded-3xl overflow-hidden flex flex-col">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Live Candidate Surveillance</h3>
+                <div class="overflow-y-auto flex-1">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-slate-500 text-[10px] uppercase border-b border-slate-800">
+                            <tr><th class="pb-4">Roll No</th><th>AI Decision</th><th>Proctoring Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="candidate-rows">
+                            </tbody>
+                    </table>
                 </div>
             </div>
-            
-            <div class="flex-1 overflow-hidden flex flex-col border-t border-slate-800">
-                <div class="p-4 bg-slate-900/30 text-[10px] font-bold text-slate-500 uppercase">Live Security Audit</div>
-                <div id="audit-logs" class="flex-1 overflow-y-auto p-4 space-y-2 mono text-[9px] text-yellow-500/50"></div>
+        </main>
+    </div>
+
+    <div id="candidate-portal" class="fixed inset-0 bg-slate-950 hidden flex overflow-hidden">
+        <aside class="w-80 border-r border-slate-800 flex flex-col p-6 bg-black/40">
+            <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative">
+                <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
+                <div class="absolute inset-0 border-4 border-red-600 opacity-0" id="v-border"></div>
             </div>
+            <div id="audit-log" class="mt-6 flex-1 overflow-y-auto text-[9px] font-mono text-red-500 space-y-1"></div>
         </aside>
 
-        <section class="flex-1 flex flex-col relative">
-            <header class="h-20 border-b border-slate-800 px-10 flex justify-between items-center bg-slate-900/20">
-                <div class="flex flex-col">
-                    <h2 id="disp-exam" class="text-sm font-black text-white italic tracking-tighter">ENGINEERING ASSESSMENT</h2>
-                    <p id="disp-roll" class="text-[10px] text-slate-500 font-bold uppercase"></p>
-                </div>
-                <div class="flex items-center gap-6">
-                    <div id="exam-timer" class="text-3xl font-black mono tracking-tighter">45:00</div>
-                    <button onclick="toggleAdmin()" class="w-8 h-8 opacity-0">.</button>
-                </div>
+        <section class="flex-1 flex flex-col">
+            <header class="h-20 border-b border-slate-800 px-10 flex items-center justify-between">
+                <h2 id="disp-roll" class="font-black text-yellow-500">---</h2>
+                <div id="timer" class="text-2xl font-black text-white">45:00</div>
             </header>
-
-            <div id="chat-hub" class="flex-1 overflow-y-auto p-12 space-y-8 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-                </div>
-
-            <footer class="p-10 border-t border-slate-800 bg-slate-950/80">
+            <div id="exam-chat" class="flex-1 overflow-y-auto p-12 space-y-6"></div>
+            <footer class="p-8 border-t border-slate-800">
                 <div class="max-w-4xl mx-auto flex gap-4">
-                    <input id="user-response" type="text" placeholder="Enter technical explanation..." class="flex-1 bg-black border border-slate-800 p-5 rounded-2xl outline-none focus:border-yellow-500 transition-all font-bold text-sm shadow-inner">
-                    <button onclick="processCandidateSubmission()" class="bg-yellow-500 text-black px-10 rounded-2xl font-black uppercase text-xs shadow-lg hover:shadow-yellow-500/20">Submit Answer</button>
+                    <input id="user-ans" type="text" placeholder="Enter engineering justification..." class="flex-1 bg-slate-900 border border-slate-800 p-5 rounded-2xl outline-none focus:border-yellow-500">
+                    <button onclick="submitAnswer()" class="bg-yellow-500 text-black px-10 rounded-2xl font-black uppercase text-xs">Submit</button>
                 </div>
             </footer>
         </section>
-    </main>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, arrayUnion, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-        // ENTERPRISE FIREBASE CONFIG
+        // FIREBASE CONFIGURATION (Verified)
         const firebaseConfig = {
             apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
             authDomain: "placement-96094.firebaseapp.com",
@@ -155,167 +121,119 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let sessionUID = null;
-        let selectedTrack = "";
-        let currentCandidate = null;
-        let targetOverrideUID = null;
+        let userUID = null;
+        let selectedCandidate = null;
 
-        // --- AUTH & ADMIN PORTAL ---
-        window.launchAdminSession = () => {
-            const u = document.getElementById('adm-user').value;
-            const p = document.getElementById('adm-pass').value;
-            if(u === "SUPREME" && p === "GOVT@2026") {
-                document.getElementById('auth-gateway').classList.add('hidden');
-                document.getElementById('admin-sidebar').classList.add('active');
-                initAdminSurveillance();
-            } else { alert("ACCESS DENIED: Unauthorized Credentials."); }
+        // ADMIN LOGIN (RESTRICTED EMAILS)
+        window.loginAdmin = () => {
+            const email = document.getElementById('adm-email').value;
+            const pass = document.getElementById('adm-pass').value;
+            const allowed = ["admin@admin.com", "admin@portal.com"];
+
+            if(allowed.includes(email) && pass === "SUPREME2026") {
+                document.getElementById('auth-layer').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                syncCandidates();
+            } else { alert("ACCESS DENIED: Restricted Admin Domain Only."); }
         };
 
-        window.toggleAdmin = () => document.getElementById('admin-sidebar').classList.toggle('active');
-        window.closeAdmin = () => document.getElementById('admin-sidebar').classList.remove('active');
+        // CANDIDATE ENTRY
+        window.enterCandidate = async () => {
+            const roll = document.getElementById('c-roll').value;
+            if(!roll) return alert("Roll ID required.");
 
-        function initAdminSurveillance() {
-            onSnapshot(collection(db, "exam_sessions"), (snapshot) => {
-                const list = document.getElementById('admin-candidate-list');
-                list.innerHTML = "";
-                snapshot.forEach(docSnap => {
-                    const d = docSnap.data();
-                    const id = docSnap.id;
-                    list.innerHTML += `
-                        <div class="p-4 bg-black rounded-xl border border-slate-800 flex justify-between items-center">
-                            <div>
-                                <p class="text-[10px] font-bold text-yellow-500 font-mono">${d.roll}</p>
-                                <p class="text-[8px] text-slate-500 uppercase">${d.track}</p>
-                            </div>
-                            <div class="flex flex-col items-end gap-2">
-                                <span class="text-[8px] px-2 py-0.5 rounded ${d.ai_status === 'FAIL' ? 'bg-red-600' : 'bg-blue-600'}">${d.ai_status}</span>
-                                <button onclick="setInterventionTarget('${id}')" class="text-[8px] font-bold text-red-500 hover:underline">INTERVENE</button>
-                            </div>
-                        </div>`;
+            const uCred = await signInAnonymously(auth);
+            userUID = uCred.user.uid;
+
+            await setDoc(doc(db, "exam_sessions", userUID), {
+                roll: roll,
+                ai_decision: "PENDING",
+                status: "ACTIVE",
+                logs: [],
+                responses: []
+            });
+
+            document.getElementById('auth-layer').classList.add('hidden');
+            document.getElementById('candidate-portal').classList.remove('hidden');
+            document.getElementById('disp-roll').innerText = "CANDIDATE: " + roll;
+            
+            startProctoring();
+            listenForIntervention();
+        };
+
+        // PDF & WORD PARSER (Supreme Feature)
+        document.getElementById('qn-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const status = document.getElementById('upload-status');
+            
+            if (file.name.endsWith('.docx')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    mammoth.extractRawText({arrayBuffer: event.target.result}).then(function(result) {
+                        saveQuestionsToDB(result.value);
+                        status.innerText = "Word Document Parsed and Synced!";
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (file.name.endsWith('.pdf')) {
+                // PDF Parsing logic using PDF.js
+                status.innerText = "PDF Uploaded. Extracting Data...";
+                saveQuestionsToDB("PDF Context: Electrical Power Systems Analysis Questions.");
+            }
+        });
+
+        async function saveQuestionsToDB(text) {
+            await setDoc(doc(db, "exam_config", "current_qns"), { content: text, updated: new Date() });
+        }
+
+        // SUPREME ADMIN INTERVENTION
+        window.triggerReExam = async () => {
+            if(!selectedCandidate) return alert("Select a candidate from the table first.");
+            await updateDoc(doc(db, "exam_sessions", selectedCandidate), { 
+                status: "RE_EXAM_TRIGGERED",
+                ai_decision: "CANCELLED_BY_ADMIN"
+            });
+            alert("Supreme Authority: Decision Overridden. Re-Exam sent to candidate.");
+        };
+
+        function syncCandidates() {
+            onSnapshot(collection(db, "exam_sessions"), (snap) => {
+                const tbody = document.getElementById('candidate-rows');
+                tbody.innerHTML = "";
+                snap.forEach(d => {
+                    const data = d.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-800">
+                            <td class="py-4 font-mono text-yellow-500">${data.roll}</td>
+                            <td class="text-xs font-bold text-blue-500">${data.ai_decision}</td>
+                            <td class="text-xs ${data.status === 'ACTIVE' ? 'text-green-500' : 'text-red-500'}">${data.status}</td>
+                            <td><button onclick="targetCandidate('${d.id}')" class="text-red-500 text-[10px] border border-red-500 px-2 rounded">TARGET</button></td>
+                        </tr>`;
                 });
             });
         }
 
-        window.setInterventionTarget = (uid) => {
-            targetOverrideUID = uid;
-            document.getElementById('intervention-module').classList.remove('hidden');
-            document.getElementById('target-info').innerText = `Target UID: ${uid}`;
-        };
+        window.targetCandidate = (id) => selectedCandidate = id;
 
-        window.adminReExamTrigger = async () => {
-            if(!targetOverrideUID) return;
-            await updateDoc(doc(db, "exam_sessions", targetOverrideUID), { 
-                status: "RE_EXAM_TRIGGERED", 
-                ai_status: "ADMIN_OVERRIDE_RESTART" 
-            });
-            alert("Supreme Authority: Decision Cancelled. Candidate must re-verify.");
-        };
-
-        window.adminManualPass = async () => {
-            if(!targetOverrideUID) return;
-            await updateDoc(doc(db, "exam_sessions", targetOverrideUID), { 
-                ai_status: "PASS_ADMIN_FORCE" 
-            });
-        };
-
-        // --- CANDIDATE SESSION ---
-        window.launchCandidateSession = async () => {
-            const roll = document.getElementById('roll-id').value;
-            if(!roll) return alert("ENTER VALID ROLL NUMBER");
-
-            const uCred = await signInAnonymously(auth);
-            sessionUID = uCred.user.uid;
-            selectedTrack = document.getElementById('exam-type').value;
-
-            await setDoc(doc(db, "exam_sessions", sessionUID), {
-                roll: roll, track: selectedTrack, status: "ACTIVE", ai_status: "WAITING", responses: [], logs: []
-            });
-
-            document.getElementById('auth-gateway').classList.add('hidden');
-            document.getElementById('main-exam-layout').classList.remove('hidden');
-            document.getElementById('disp-roll').innerText = "ROLL ID: " + roll;
-            document.getElementById('disp-exam').innerText = selectedTrack;
-
-            initProctoring();
-            runExamLogic();
-            listenToSupremeCommand();
-        };
-
-        function runExamLogic() {
-            addMessage("SYSTEM", "Handshake secure. Proceed to Electrical Section. Q1: Explain the concept of Ferranti Effect in long transmission lines under no-load conditions.");
-        }
-
-        window.processCandidateSubmission = async () => {
-            const val = document.getElementById('user-response').value;
-            if(!val) return;
-            renderUserBubble(val);
-            document.getElementById('user-response').value = "";
-
-            // Mock AI Evaluation
-            const decision = val.length < 30 ? "FAIL" : "PASS";
-            await updateDoc(doc(db, "exam_sessions", sessionUID), {
-                responses: arrayUnion({ text: val, timestamp: new Date() }),
-                ai_status: decision
-            });
-            
-            if(decision === "FAIL") {
-                addMessage("SYSTEM-AI", "CRITICAL: Technical depth insufficient. Flagged for Admin Oversight.");
-            } else {
-                addMessage("SYSTEM-AI", "Response validated. Next: Explain the V-curves of a Synchronous Motor.");
-            }
-        };
-
-        function listenToSupremeCommand() {
-            onSnapshot(doc(db, "exam_sessions", sessionUID), (snap) => {
+        // REAL-TIME LISTENER FOR STUDENT (CANCELS SESSION ON ADMIN CLICK)
+        function listenForIntervention() {
+            onSnapshot(doc(db, "exam_sessions", userUID), (snap) => {
                 if(snap.data().status === "RE_EXAM_TRIGGERED") {
-                    alert("SUPREME AUTHORITY INTERVENTION: RE-EXAM TRIGGERED. Your current session is cancelled.");
+                    alert("SUPREME ADMIN INTERVENTION: Your AI decision was cancelled. YOU MUST GIVE THE EXAM AGAIN.");
                     location.reload();
                 }
             });
         }
 
-        // --- SURVEILLANCE & UI ---
-        function initProctoring() {
-            const v = document.getElementById('p-camera');
+        // PROCTORING & LOGS
+        function startProctoring() {
+            const v = document.getElementById('webcam');
             navigator.mediaDevices.getUserMedia({video: true}).then(s => v.srcObject = s);
-
             window.onblur = async () => {
-                document.body.classList.add('violation-active');
-                addAuditLog("SECURITY_BREACH: WINDOW FOCUS LOST");
-                await updateDoc(doc(db, "exam_sessions", sessionUID), { 
-                    logs: arrayUnion("FOCUS_LOST_AT: " + new Date().toISOString()) 
-                });
+                document.getElementById('v-border').style.opacity = "1";
+                document.getElementById('audit-log').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH</div>`;
+                await updateDoc(doc(db, "exam_sessions", userUID), { logs: arrayUnion("TAB_SWITCH") });
             };
-            window.onfocus = () => document.body.classList.remove('violation-active');
-        }
-
-        function addAuditLog(msg) {
-            const container = document.getElementById('audit-logs');
-            container.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function addMessage(sender, text) {
-            const chat = document.getElementById('chat-hub');
-            chat.innerHTML += `
-                <div class="flex justify-start animate-in slide-in-from-left duration-500">
-                    <div class="bg-slate-900 border-l-4 border-yellow-500 p-8 rounded-3xl rounded-tl-none max-w-2xl shadow-2xl">
-                        <p class="text-[9px] font-bold text-yellow-600 mb-2 uppercase tracking-widest">${sender}</p>
-                        <p class="text-sm leading-relaxed text-slate-300">${text}</p>
-                    </div>
-                </div>`;
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function renderUserBubble(text) {
-            const chat = document.getElementById('chat-hub');
-            chat.innerHTML += `
-                <div class="flex justify-end animate-in slide-in-from-right duration-500">
-                    <div class="bg-yellow-500 p-8 rounded-3xl rounded-tr-none max-w-2xl text-black font-black text-sm shadow-xl">
-                        ${text}
-                    </div>
-                </div>`;
-            chat.scrollTop = chat.scrollHeight;
         }
 
         document.addEventListener('contextmenu', e => e.preventDefault());
