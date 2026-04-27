@@ -31,7 +31,37 @@
             <span id="connectionStatus" class="text-xs text-gray-500">FIREBASE CONNECTED</span>
         </div>
     </header>
+<div id="admin-portal" class="p-6 bg-gray-950 min-h-screen">
+    <div class="grid grid-cols-12 gap-6">
+        
+        <div class="col-span-4 bg-gray-900 p-5 rounded-2xl border border-gray-800">
+            <h2 class="text-blue-400 font-bold mb-4">Interview Setup</h2>
+            <div class="border-2 border-dashed border-gray-700 p-6 rounded-xl text-center">
+                <input type="file" id="jsonUpload" class="hidden" onchange="loadBank(event)">
+                <label for="jsonUpload" class="cursor-pointer text-sm text-gray-500">Upload Answer Key (JSON)</label>
+            </div>
+            <div id="bankList" class="mt-4 space-y-2 max-h-60 overflow-auto">
+                </div>
+        </div>
 
+        <div class="col-span-8 bg-gray-900 p-5 rounded-2xl border border-gray-800">
+            <h2 class="text-green-400 font-bold mb-4">Live Marking Feed</h2>
+            <div id="liveFeed" class="space-y-4">
+                <div class="bg-black p-4 rounded-xl border border-blue-900/30">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-gray-500">CANDIDATE: Soham Pal</span>
+                        <span id="liveScore" class="text-xl font-black text-blue-500">Score: --%</span>
+                    </div>
+                    <div class="bg-gray-800 h-2 w-full rounded-full overflow-hidden">
+                        <div id="scoreBar" class="bg-blue-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                    <p id="adminTranscript" class="mt-4 text-sm italic text-gray-400 font-mono">Waiting for student to speak...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
     <main class="p-6 max-w-[1600px] mx-auto grid grid-cols-12 gap-6">
         
         <div class="col-span-12 lg:col-span-4 space-y-6">
@@ -192,7 +222,106 @@
                 speak(qn);
             }
         });
+        // --- ADMIN CORE FUNCTIONS ---
 
+// 1. Upload Question Bank (JSON)
+function handleQnUpload(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const qnBank = JSON.parse(e.target.result);
+            // Save to Firebase
+            db.ref('settings/question_bank').set(qnBank);
+            
+            const statusDiv = document.getElementById('qnStatus');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = `Uploaded: ${qnBank.length} Questions Successfully.`;
+        } catch (err) {
+            alert("Error: Invalid JSON format. Please check the file.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+// 2. Control Regulations
+function toggleRegulation(type, status) {
+    db.ref(`settings/regulations/${type}`).set(status);
+}
+
+// 3. Live Question Pushing
+document.getElementById('liveQnInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const studentId = "STUDENT_001"; // In real use, map this to the specific candidate card
+        const question = e.target.value;
+        
+        if(question.trim() !== "") {
+            db.ref(`live_sessions/${studentId}/current_qn`).set(question);
+            e.target.value = "";
+            console.log("Question pushed to Firebase.");
+        }
+    }
+});
+
+// 4. Reset Student Status (Admin Override)
+function resetStudent(studentId) {
+    if(confirm(`Unlock access for ${studentId}?`)) {
+        db.ref(`live_sessions/${studentId}/status`).update({
+            violations: 0,
+            last_reason: "Reset by Admin"
+        });
+        alert("Student Unblocked.");
+    }
+}
+
+// 5. Global Rule UI Toggle
+function toggleGlobalRule(rule) {
+    const btn = document.getElementById(`rule-${rule}`);
+    // Logic to toggle proctoring state in Firebase and update UI
+    db.ref(`settings/regulations/${rule}`).transaction(current => {
+        const newVal = !current;
+        btn.innerText = `AI PROCTOR: ${newVal ? 'ON' : 'OFF'}`;
+        btn.className = newVal ? 'px-3 py-1 bg-green-900/30 border border-green-500 text-green-500 text-xs rounded-full' 
+                               : 'px-3 py-1 bg-red-900/30 border border-red-500 text-red-500 text-xs rounded-full';
+        return newVal;
+    });
+}
+// Function to run when Student finishes speaking
+function processMarking(studentSpeech, questionId) {
+    // 1. Fetch data from your JSON bank
+    const questionData = questionBank.find(q => q.id === questionId);
+    if (!questionData) return;
+
+    const transcript = studentSpeech.toLowerCase();
+    const keywords = questionData.keywords;
+    let matchCount = 0;
+
+    // 2. Scan transcript for keywords from PDF
+    keywords.forEach(word => {
+        if (transcript.includes(word.toLowerCase())) {
+            matchCount++;
+        }
+    });
+
+    // 3. Calculate Final Marks
+    const rawScore = (matchCount / keywords.length);
+    const finalMarks = (rawScore * questionData.totalMarks).toFixed(1);
+    const percentage = (rawScore * 100).toFixed(0);
+
+    // 4. Update Admin Dashboard
+    document.getElementById('liveScore').innerText = `Score: ${percentage}%`;
+    document.getElementById('scoreBar').style.width = `${percentage}%`;
+    document.getElementById('adminTranscript').innerText = studentSpeech;
+
+    // 5. Save to Firebase
+    db.ref(`live_sessions/${userId}/results`).push({
+        question: questionData.question,
+        studentAnswer: studentSpeech,
+        marksAwarded: finalMarks,
+        totalPossible: questionData.totalMarks,
+        timestamp: Date.now()
+    });
+}
         // --- 6. FILE UPLOAD ---
         async function uploadDocument() {
             const file = document.getElementById('filePicker').files[0];
