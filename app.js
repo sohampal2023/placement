@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
@@ -15,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- SHARED LOGIN LOGIC ---
+// --- AUTHENTICATION ---
 const loginForm = document.getElementById('loginForm');
 if(loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -24,58 +24,36 @@ if(loginForm) {
         const pass = document.getElementById('password').value;
         try {
             await signInWithEmailAndPassword(auth, email, pass);
+            // Requirement 4: Admin Logic
             if(email === "admin@admin.com" && pass === "Admin@1234") {
                 window.location.href = "admin.html";
             } else {
                 window.location.href = "student.html";
             }
-        } catch (err) { alert("Invalid Credentials"); }
+        } catch (err) { alert("Login Failed: Check Credentials"); }
     });
 }
 
-// --- PUBLIC NOTICE LOGIC (INDEX.HTML) ---
-const noticeList = document.getElementById('noticeList');
-if(noticeList) {
-    const loadNotices = async () => {
-        const snap = await getDocs(collection(db, "notices"));
-        noticeList.innerHTML = "";
-        snap.forEach(doc => {
-            noticeList.innerHTML += `<div class="notice-card">${doc.data().text}</div>`;
-        });
-    };
-    loadNotices();
-}
-
-// --- ADMIN SIDE LOGIC (ADMIN.HTML) ---
+// --- ADMIN FEATURES ---
 if(window.location.pathname.includes("admin.html")) {
     const loadStats = async () => {
-        const userSnap = await getDocs(collection(db, "users"));
-        document.getElementById('enrollmentCount').innerText = userSnap.size;
-        
-        const qSnap = await getDocs(collection(db, "questions"));
-        const bankList = document.getElementById('currentBankList');
-        bankList.innerHTML = "";
-        qSnap.forEach(doc => {
-            bankList.innerHTML += `<li>[${doc.data().category}] ${doc.data().text}</li>`;
-        });
+        const snap = await getDocs(collection(db, "users"));
+        document.getElementById('studentCount').innerText = snap.size;
     };
-    
-    document.getElementById('addQuestionBtn').onclick = async () => {
-        const text = document.getElementById('questionInput').value;
-        const cat = document.getElementById('bankCategory').value;
-        if(text) {
-            await addDoc(collection(db, "questions"), { text, category: cat });
-            location.reload();
-        }
+    document.getElementById('addQBtn').onclick = async () => {
+        const text = document.getElementById('qInput').value;
+        const cat = document.getElementById('bankType').value;
+        await addDoc(collection(db, "questions"), { text, category: cat });
+        alert("Added to Bank!");
     };
     loadStats();
 }
 
-// --- STUDENT & AI INTERVIEW LOGIC (STUDENT.HTML) ---
+// --- STUDENT & AI FEATURES ---
 const askBtn = document.getElementById('askBtn');
 if(askBtn) {
     askBtn.onclick = () => {
-        const speech = new SpeechSynthesisUtterance("Welcome to the interview. Please describe your project experience.");
+        const speech = new SpeechSynthesisUtterance("What is your primary technical skill?");
         window.speechSynthesis.speak(speech);
     };
 
@@ -83,20 +61,20 @@ if(askBtn) {
     recordBtn.onclick = () => {
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.start();
-        recognition.onresult = (event) => {
-            document.getElementById('transcriptText').innerText = event.results[0][0].transcript;
+        recognition.onresult = (e) => {
+            document.getElementById('transcriptOutput').innerText = e.results[0][0].transcript;
         };
     };
 
-    // AI Proctoring: Tab Switch Detection
+    // AI Proctoring Requirement
     document.addEventListener("visibilitychange", () => {
         if(document.hidden) {
-            alert("AI PROCTOR WARNING: Tab switch recorded. This incident will be reported to admin.");
-            addDoc(collection(db, "violations"), { student: "Student_User", type: "Tab Switch", time: new Date() });
+            alert("AI PROCTOR: Stay on this tab!");
+            addDoc(collection(db, "violations"), { type: "Tab Switch", time: serverTimestamp() });
         }
     });
 }
 
-// Logout Global
-const lBtn = document.getElementById('logoutBtn');
-if(lBtn) { lBtn.onclick = () => { signOut(auth); window.location.href="index.html"; }; }
+// Logout
+const lo = document.getElementById('logoutBtn');
+if(lo) lo.onclick = () => { signOut(auth); window.location.href="index.html"; };
