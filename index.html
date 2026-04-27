@@ -8,123 +8,97 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
   <style>
-    body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #020617; color: white; overflow: hidden; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #020617; color: white; overflow: hidden; }
     .glass { background: rgba(15,23,42,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-    .pulse-live { animation: pulse-red 2s infinite; }
-    @keyframes pulse-red { 0% { color: #ef4444; } 50% { color: #7f1d1d; } 100% { color: #ef4444; } }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    .status-pending { color: #f59e0b; }
+    .status-approved { color: #10b981; }
+    .status-disqualified { color: #ef4444; }
   </style>
 </head>
 <body>
 
 <div id="gate-overlay" class="fixed inset-0 flex items-center justify-center p-8 z-50 bg-slate-950">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-6xl">
-    <div class="glass rounded-3xl p-10 border-yellow-500/20">
+    <div class="glass rounded-3xl p-10">
       <h1 class="text-4xl font-bold text-yellow-400">Candidate Access</h1>
-      <p class="text-slate-400 mt-2">Enter credentials to begin examination.</p>
       <div class="space-y-4 mt-8">
-        <input id="cand-email" type="email" placeholder="Email Address" class="w-full p-4 rounded-xl bg-black border border-slate-700 focus:border-yellow-400 outline-none">
-        <input id="cand-dob" type="password" placeholder="Password / DOB" class="w-full p-4 rounded-xl bg-black border border-slate-700 focus:border-yellow-400 outline-none">
-        <button onclick="portalAccess()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold hover:bg-yellow-300 transition">Initiate Session</button>
+        <input id="cand-email" type="email" placeholder="Email Address" class="w-full p-4 rounded-xl bg-black border border-slate-700 outline-none">
+        <input id="cand-dob" type="password" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-slate-700 outline-none">
+        <button onclick="portalAccess()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold">Sign In / Register</button>
+        <p id="login-msg" class="text-xs text-center text-slate-400"></p>
       </div>
     </div>
-    <div class="glass rounded-3xl p-10 border-red-500/20">
+    <div class="glass rounded-3xl p-10">
       <h1 class="text-4xl font-bold text-red-500">Supreme Admin</h1>
-      <p class="text-slate-400 mt-2">Secure HR command override.</p>
       <div class="space-y-4 mt-8">
-        <input id="adm-user" type="email" placeholder="Admin ID" class="w-full p-4 rounded-xl bg-black border border-slate-700 focus:border-red-500 outline-none">
-        <input id="adm-key" type="password" placeholder="Command Key" class="w-full p-4 rounded-xl bg-black border border-slate-700 focus:border-red-500 outline-none">
-        <button onclick="launchAdmin()" class="w-full bg-red-700 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition">Authorize Access</button>
+        <input id="adm-user" type="email" placeholder="Admin ID" class="w-full p-4 rounded-xl bg-black border border-slate-700 outline-none">
+        <input id="adm-key" type="password" placeholder="Command Key" class="w-full p-4 rounded-xl bg-black border border-slate-700 outline-none">
+        <button onclick="launchAdmin()" class="w-full bg-red-700 text-white py-4 rounded-xl font-bold">Authorize HR Access</button>
       </div>
     </div>
   </div>
 </div>
 
 <div id="admin-hub" class="hidden fixed inset-0 bg-slate-950 flex flex-col z-40">
-  <header class="h-20 glass flex justify-between items-center px-10 border-b border-red-900/30">
-    <div class="flex items-center gap-4">
-      <div class="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
-      <h1 class="text-xl font-bold tracking-tighter text-red-500 uppercase">Supreme Command Portal</h1>
-    </div>
-    <button onclick="location.reload()" class="bg-red-900/30 text-red-500 border border-red-500/30 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition">Terminate Connection</button>
+  <header class="h-20 glass flex justify-between items-center px-10 border-b border-slate-800">
+    <h1 class="text-xl font-bold text-red-500 uppercase tracking-tighter">HR Command Center</h1>
+    <button onclick="location.reload()" class="bg-red-900/20 text-red-500 border border-red-500/30 px-4 py-2 rounded-lg text-xs">LOGOUT</button>
   </header>
 
   <main class="flex-1 grid grid-cols-12 gap-6 p-6 overflow-hidden">
-    <section class="col-span-3 space-y-6">
+    <section class="col-span-3 space-y-4">
       <div class="glass rounded-2xl p-5">
-        <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Interview Mode</h3>
-        <div class="flex gap-2 p-1 bg-black rounded-xl">
-          <button id="btn-ai-mode" onclick="updateGlobalMode('AI')" class="flex-1 py-2 rounded-lg text-sm font-bold transition bg-yellow-500 text-black">AI MODE</button>
-          <button id="btn-live-mode" onclick="updateGlobalMode('LIVE')" class="flex-1 py-2 rounded-lg text-sm font-bold transition text-slate-400">LIVE MODE</button>
+        <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">Interview Control</h3>
+        <div class="flex gap-2 p-1 bg-black rounded-lg mb-4">
+          <button id="btn-ai-mode" onclick="updateGlobalMode('AI')" class="flex-1 py-2 rounded-lg text-[10px] font-bold transition">AI MODE</button>
+          <button id="btn-live-mode" onclick="updateGlobalMode('LIVE')" class="flex-1 py-2 rounded-lg text-[10px] font-bold transition">LIVE MODE</button>
         </div>
+        <input type="file" id="file-uploader" class="hidden" accept=".txt,.pdf,.docx">
+        <label for="file-uploader" class="block border-2 border-dashed border-slate-800 p-6 text-center rounded-xl cursor-pointer hover:border-yellow-500/40 transition">
+          <span class="text-xs text-slate-400">Upload QN Bank (PDF/Word)</span>
+        </label>
+        <div id="parse-status" class="mt-2 text-[10px] text-yellow-500 font-mono">Questions: 0</div>
       </div>
 
       <div class="glass rounded-2xl p-5">
-        <h3 class="text-sm font-bold text-slate-500 uppercase mb-2">Question Bank (AI Mode)</h3>
-        <input type="file" id="file-uploader" class="hidden" accept=".txt,.pdf,.docx">
-        <label for="file-uploader" class="block border border-dashed border-slate-700 p-6 text-center rounded-xl cursor-pointer hover:border-yellow-500/50 transition">
-          <span class="text-xs text-slate-400">Upload PDF/Word/Text</span>
-        </label>
-        <div id="parse-status" class="mt-3 text-[10px] text-yellow-500 font-mono">0 Questions Loaded</div>
-      </div>
-
-      <div class="glass rounded-2xl p-5 bg-red-950/10 border-red-500/20">
-        <h3 class="text-sm font-bold text-red-500 uppercase mb-4">Live Command</h3>
-        <textarea id="live-qn-input" rows="3" class="w-full bg-black p-3 rounded-lg text-sm border border-slate-800 focus:border-red-500 outline-none" placeholder="Type question for selected candidate..."></textarea>
-        <button onclick="pushLiveQuestion()" class="w-full mt-3 bg-red-600 py-3 rounded-xl font-bold text-sm hover:bg-red-500">Inject Question</button>
+        <h3 class="text-xs font-bold text-red-500 uppercase mb-3">Manual Question</h3>
+        <textarea id="live-qn-input" rows="3" class="w-full bg-black p-3 rounded-lg text-xs border border-slate-800 outline-none focus:border-red-500" placeholder="Type question..."></textarea>
+        <button onclick="pushLiveQuestion()" class="w-full mt-2 bg-red-600 py-2 rounded-lg font-bold text-xs">PUSH TO CANDIDATE</button>
       </div>
     </section>
 
     <section class="col-span-9 glass rounded-2xl overflow-hidden flex flex-col">
-      <div class="p-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
-        <h2 class="font-bold text-slate-300">Surveillance Matrix</h2>
-        <span id="active-target-display" class="text-xs font-mono text-red-500 uppercase">No Target Selected</span>
-      </div>
-      <div class="flex-1 overflow-y-auto">
-        <table class="w-full text-left border-collapse">
-          <thead class="sticky top-0 bg-slate-900 text-slate-500 text-[10px] uppercase tracking-widest">
-            <tr>
-              <th class="p-4">Candidate</th>
-              <th class="p-4 text-center">Score</th>
-              <th class="p-4 text-center">Violations</th>
-              <th class="p-4">Status</th>
-              <th class="p-4 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody id="candidate-matrix-body" class="text-sm"></tbody>
-        </table>
-      </div>
+      <table class="w-full text-left">
+        <thead class="bg-slate-900/50 text-slate-500 text-[10px] uppercase">
+          <tr>
+            <th class="p-4">Candidate Email</th>
+            <th class="p-4">Status</th>
+            <th class="p-4">Score</th>
+            <th class="p-4 text-right">HR Action</th>
+          </tr>
+        </thead>
+        <tbody id="candidate-matrix-body" class="text-sm"></tbody>
+      </table>
     </section>
   </main>
 </div>
 
 <div id="exam-portal" class="hidden fixed inset-0 flex z-30">
-  <aside class="w-80 bg-black p-6 border-r border-slate-800 flex flex-col">
-    <div class="rounded-2xl overflow-hidden bg-slate-900 aspect-video mb-6 relative">
-      <video id="web-feed" autoplay playsinline class="w-full h-full object-cover"></video>
-      <div class="absolute top-2 right-2 flex items-center gap-1 bg-red-600 px-2 py-0.5 rounded text-[8px] font-bold animate-pulse">REC</div>
-    </div>
-    <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">Security Console</div>
-    <div id="proctor-logs" class="flex-1 overflow-y-auto bg-slate-900/50 p-4 rounded-xl text-red-400 text-[9px] font-mono leading-relaxed space-y-1">
-      <div>> LINK_ESTABLISHED</div>
+  <aside class="w-72 bg-black p-6 border-r border-slate-900 flex flex-col">
+    <video id="web-feed" autoplay playsinline class="w-full aspect-video rounded-xl bg-slate-900 object-cover mb-4"></video>
+    <div id="proctor-logs" class="flex-1 bg-slate-900/50 p-3 rounded-xl text-[10px] font-mono text-red-400 overflow-y-auto">
+      <div>> SYSTEM_START</div>
     </div>
   </aside>
-
   <main class="flex-1 flex flex-col bg-slate-950">
     <header class="h-20 flex justify-between items-center px-10 border-b border-slate-900">
-      <div class="flex items-center gap-4">
-        <h1 id="disp-roll-id" class="text-yellow-500 font-mono font-bold tracking-widest">USER_NULL</h1>
-        <div id="mode-indicator" class="text-[10px] bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20">AI_EVALUATION</div>
-      </div>
-      <div id="clock-timer" class="text-3xl font-mono font-black text-white">45:00</div>
+      <div id="disp-roll-id" class="text-yellow-500 font-mono text-sm">USER_INIT</div>
+      <div id="clock-timer" class="text-2xl font-black text-white">45:00</div>
     </header>
-
-    <section id="interaction-box" class="flex-1 overflow-y-auto p-10 space-y-6 flex flex-col"></section>
-
-    <footer class="p-6 bg-slate-900/30 border-t border-slate-900 flex gap-4">
-      <input id="candidate-input" type="text" class="flex-1 p-4 rounded-xl bg-black border border-slate-800 text-white focus:border-yellow-500 outline-none" placeholder="Enter your response here...">
-      <button onclick="commitResponse()" class="bg-yellow-400 text-black px-10 rounded-xl font-black uppercase text-sm hover:bg-yellow-300 transition">Submit</button>
+    <section id="interaction-box" class="flex-1 overflow-y-auto p-10 space-y-6"></section>
+    <footer class="p-6 border-t border-slate-900 flex gap-4">
+      <input id="candidate-input" type="text" class="flex-1 p-4 rounded-xl bg-black border border-slate-800 text-white outline-none focus:border-yellow-500" placeholder="Your answer...">
+      <button onclick="commitResponse()" class="bg-yellow-400 text-black px-8 rounded-xl font-bold">SUBMIT</button>
     </footer>
   </main>
 </div>
@@ -133,7 +107,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // Configuration (From User's Input)
   const firebaseConfig = {
     apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
     authDomain: "placement-96094.firebaseapp.com",
@@ -147,249 +120,169 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Global Context
   window.userUID = null;
-  window.activeTargetUID = null;
   window.currentMode = 'AI';
-  window.questionBank = [];
   window.candidateRegistry = {};
 
-  // --- CORE SYNC ---
-
-  // Listen for Interview Mode (AI or LIVE)
-  onValue(ref(db, 'settings/mode'), (snap) => {
-    window.currentMode = snap.val() || 'AI';
-    const indicator = document.getElementById('mode-indicator');
-    if(indicator) indicator.innerText = window.currentMode + "_MODE";
-    
-    // Update Admin UI buttons
-    const aiBtn = document.getElementById('btn-ai-mode');
-    const liveBtn = document.getElementById('btn-live-mode');
-    if(aiBtn && liveBtn) {
-      if(window.currentMode === 'AI') {
-        aiBtn.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-yellow-500 text-black";
-        liveBtn.className = "flex-1 py-2 rounded-lg text-sm font-bold text-slate-400";
-      } else {
-        liveBtn.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-red-600 text-white";
-        aiBtn.className = "flex-1 py-2 rounded-lg text-sm font-bold text-slate-400";
-      }
-    }
-  });
-
-  // Listen for Live Questions (Specific for the candidate)
-  window.listenForLiveQuestions = function(email) {
-    const safeId = email.replace(/\./g, '_');
-    onValue(ref(db, `candidates/${safeId}/liveQuestion`), (snap) => {
-      const q = snap.val();
-      if(q && window.currentMode === 'LIVE') {
-        window.appendChatBubble('HUMAN_INTERVIEWER', q);
-      }
-    });
-  };
-
-  // --- ACTIONS ---
-
-  window.portalAccess = function() {
-    const email = document.getElementById('cand-email').value.trim();
-    const pass = document.getElementById('cand-dob').value.trim();
-    if(!email || !pass) return alert("Credentials missing");
-
-    window.userUID = email;
-    const safeId = email.replace(/\./g, '_');
-
-    onValue(ref(db, 'candidates/' + safeId), (snap) => {
-      const data = snap.val();
-      if(data && data.password !== pass) return alert("Invalid Access");
-
-      // Initialize/Update in Cloud
-      update(ref(db, 'candidates/' + safeId), {
-        password: pass,
-        status: 'ACTIVE',
-        lastSeen: new Date().toISOString()
-      });
-
-      document.getElementById('gate-overlay').classList.add('hidden');
-      document.getElementById('exam-portal').classList.remove('hidden');
-      document.getElementById('disp-roll-id').innerText = email.toUpperCase();
-
-      window.initCamera();
-      window.initSecurityProtocol();
-      window.startTimer();
-      window.listenForLiveQuestions(email);
-      
-      if(window.currentMode === 'AI') setTimeout(window.deliverAIQuestion, 2000);
-    }, { onlyOnce: true });
-  };
-
-  window.launchAdmin = function() {
-    const user = document.getElementById('adm-user').value;
-    const key = document.getElementById('adm-key').value;
-    if(user === 'admin@sger.gov' && key === 'SUPREME2026') {
+  // --- ADMIN LOGIC ---
+  window.launchAdmin = () => {
+    const u = document.getElementById('adm-user').value;
+    const k = document.getElementById('adm-key').value;
+    if(u === 'admin@sger.gov' && k === 'SUPREME2026') {
       document.getElementById('gate-overlay').classList.add('hidden');
       document.getElementById('admin-hub').classList.remove('hidden');
       window.startHRMonitoring();
-    } else { alert("Access Denied"); }
+    } else { alert("Invalid Credentials"); }
   };
 
-  window.startHRMonitoring = function() {
+  window.startHRMonitoring = () => {
     onValue(ref(db, 'candidates'), (snap) => {
       window.candidateRegistry = snap.val() || {};
-      window.syncSurveillanceMatrix();
+      const body = document.getElementById('candidate-matrix-body');
+      body.innerHTML = '';
+      Object.keys(window.candidateRegistry).forEach(id => {
+        const c = window.candidateRegistry[id];
+        const email = id.replace(/_/g,'.');
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-900";
+        row.innerHTML = `
+          <td class="p-4 font-mono">${email}</td>
+          <td class="p-4"><span class="status-${c.status.toLowerCase()} text-[10px] font-bold uppercase">${c.status}</span></td>
+          <td class="p-4 text-yellow-500 font-bold">${c.score || 0}%</td>
+          <td class="p-4 text-right space-x-2">
+            <button onclick="approveCandidate('${email}')" class="bg-green-600 px-3 py-1 rounded text-[10px] font-bold">APPROVE</button>
+            <button onclick="targetCandidate('${email}')" class="bg-slate-700 px-3 py-1 rounded text-[10px] font-bold">TARGET</button>
+            <button onclick="disqualifyCandidate('${email}')" class="bg-red-600 px-3 py-1 rounded text-[10px] font-bold">BAN</button>
+          </td>
+        `;
+        body.appendChild(row);
+      });
     });
   };
 
-  window.updateGlobalMode = function(mode) {
-    set(ref(db, 'settings/mode'), mode);
-  };
+  window.approveCandidate = (email) => update(ref(db, `candidates/${email.replace(/\./g,'_')}`), { status: 'APPROVED' });
+  window.disqualifyCandidate = (email) => update(ref(db, `candidates/${email.replace(/\./g,'_')}`), { status: 'DISQUALIFIED' });
+  window.targetCandidate = (email) => { window.activeTarget = email; alert("Targeted: " + email); };
 
-  window.pushLiveQuestion = function() {
-    if(!window.activeTargetUID) return alert("Select a candidate from the table first");
-    const q = document.getElementById('live-qn-input').value.trim();
-    if(!q) return;
-    const safeId = window.activeTargetUID.replace(/\./g, '_');
-    set(ref(db, `candidates/${safeId}/liveQuestion`), q);
-    document.getElementById('live-qn-input').value = '';
-    alert("Question Pushed to " + window.activeTargetUID);
-  };
+  window.updateGlobalMode = (m) => set(ref(db, 'settings/mode'), m);
 
-  window.commitResponse = function() {
-    const input = document.getElementById('candidate-input');
-    const val = input.value.trim();
-    if(!val) return;
+  // --- CANDIDATE LOGIC ---
+  window.portalAccess = () => {
+    const email = document.getElementById('cand-email').value.trim();
+    const pass = document.getElementById('cand-dob').value.trim();
+    if(!email.includes('@')) return alert("Valid email required");
 
-    window.renderUserBubble(val);
-    input.value = '';
-
-    const safeId = window.userUID.replace(/\./g, '_');
-    // Basic AI scoring simulation
-    const score = Math.floor(Math.random() * 30) + 60;
-    
-    // Log to Firebase
-    push(ref(db, `candidates/${safeId}/responses`), {
-      text: val,
-      timestamp: new Date().toISOString(),
-      mode: window.currentMode
-    });
-    
-    update(ref(db, `candidates/${safeId}`), { score: score });
-
-    if(window.currentMode === 'AI') {
-      setTimeout(window.deliverAIQuestion, 1500);
-    }
-  };
-
-  window.deliverAIQuestion = () => {
-    onValue(ref(db, 'settings/questionBank'), (snap) => {
-      const bank = snap.val() || [];
-      if(bank.length > 0) {
-        const q = bank[Math.floor(Math.random() * bank.length)];
-        window.appendChatBubble('AI_PROCTOR', q);
+    const safeId = email.replace(/\./g,'_');
+    onValue(ref(db, `candidates/${safeId}`), (snap) => {
+      const data = snap.val();
+      if(!data) {
+        // New Registration
+        set(ref(db, `candidates/${safeId}`), { password: pass, status: 'PENDING', score: 0, violations: 0 });
+        document.getElementById('login-msg').innerText = "Registration Successful. Awaiting HR Approval.";
       } else {
-        window.appendChatBubble('SYSTEM', "Waiting for HR to upload Question Bank...");
+        if(data.password !== pass) return alert("Wrong Password");
+        if(data.status === 'PENDING') return alert("Access Denied: Your profile is still PENDING HR approval.");
+        if(data.status === 'DISQUALIFIED') return alert("Account Banned.");
+
+        window.userUID = email;
+        document.getElementById('gate-overlay').classList.add('hidden');
+        document.getElementById('exam-portal').classList.remove('hidden');
+        document.getElementById('disp-roll-id').innerText = email;
+        window.initCandidatePortal();
       }
     }, { onlyOnce: true });
   };
 
-  // --- UI SUPPORT ---
-
-  window.syncSurveillanceMatrix = () => {
-    const body = document.getElementById('candidate-matrix-body');
-    body.innerHTML = '';
-    Object.keys(window.candidateRegistry).forEach(id => {
-      const c = window.candidateRegistry[id];
-      const email = id.replace(/_/g, '.');
-      const row = document.createElement('tr');
-      row.className = "border-b border-slate-800 hover:bg-slate-900/30 transition cursor-pointer";
-      if(window.activeTargetUID === email) row.classList.add('bg-red-500/10');
-      
-      row.innerHTML = `
-        <td class="p-4 font-mono font-bold">${email}</td>
-        <td class="p-4 text-center text-yellow-500 font-black">${c.score || 0}%</td>
-        <td class="p-4 text-center text-red-500 font-mono">${c.violations || 0}</td>
-        <td class="p-4"><span class="text-[10px] px-2 py-1 rounded bg-slate-800 border border-slate-700">${c.status}</span></td>
-        <td class="p-4 text-right"><button onclick="setTarget('${email}')" class="text-[10px] bg-slate-700 px-3 py-1 rounded hover:bg-red-600 transition">TARGET</button></td>
-      `;
-      body.appendChild(row);
-    });
-  };
-
-  window.setTarget = (email) => {
-    window.activeTargetUID = email;
-    document.getElementById('active-target-display').innerText = "TARGET: " + email;
-    window.syncSurveillanceMatrix();
-  };
-
-  window.initCamera = () => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
-      document.getElementById('web-feed').srcObject = s;
-    }).catch(e => {
-      document.getElementById('proctor-logs').innerHTML += `<div class="text-red-600 font-bold">! CAMERA_CRITICAL_FAILURE</div>`;
-    });
-  };
-
-  window.initSecurityProtocol = () => {
-    window.onblur = () => {
-      if(!window.userUID) return;
-      const safeId = window.userUID.replace(/\./g, '_');
-      const v = (window.candidateRegistry[safeId]?.violations || 0) + 1;
-      update(ref(db, `candidates/${safeId}`), { violations: v });
-      document.getElementById('proctor-logs').innerHTML += `<div>[${new Date().toLocaleTimeString()}] BREACH: TAB_SWITCH</div>`;
-    };
-  };
-
-  window.startTimer = () => {
-    let sec = 2700;
-    const el = document.getElementById('clock-timer');
+  window.initCandidatePortal = () => {
+    // Camera
+    navigator.mediaDevices.getUserMedia({video: true}).then(s => document.getElementById('web-feed').srcObject = s);
+    // Timer
+    let s = 2700;
     setInterval(() => {
-      sec--;
-      const m = String(Math.floor(sec/60)).padStart(2,'0');
-      const s = String(sec%60).padStart(2,'0');
-      el.innerText = `${m}:${s}`;
+      s--; 
+      document.getElementById('clock-timer').innerText = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
     }, 1000);
+    // Listen for Mode/Questions
+    onValue(ref(db, 'settings/mode'), (snap) => { window.currentMode = snap.val() || 'AI'; });
+    onValue(ref(db, `candidates/${window.userUID.replace(/\./g,'_')}/liveQuestion`), (snap) => {
+      if(snap.val() && window.currentMode === 'LIVE') window.addMsg('INTERVIEWER', snap.val());
+    });
+    if(window.currentMode === 'AI') setTimeout(window.askAIQuestion, 2000);
   };
 
-  window.appendChatBubble = (sender, msg) => {
+  window.commitResponse = () => {
+    const input = document.getElementById('candidate-input');
+    const val = input.value.trim();
+    if(!val) return;
+    
+    // UI Update
     const box = document.getElementById('interaction-box');
-    const div = document.createElement('div');
-    div.className = "max-w-[80%] self-start animate-fade-in";
-    div.innerHTML = `
-      <div class="text-[9px] font-bold text-slate-500 mb-1 uppercase">${sender}</div>
-      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 shadow-xl">${msg}</div>
-    `;
-    box.appendChild(div);
+    box.innerHTML += `<div class="self-end bg-yellow-500 text-black p-4 rounded-2xl ml-20 font-medium text-sm">${val}</div>`;
+    input.value = '';
+    box.scrollTop = box.scrollHeight;
+
+    // Save Response
+    const safeId = window.userUID.replace(/\./g,'_');
+    push(ref(db, `candidates/${safeId}/responses`), { text: val, time: new Date().toISOString() });
+    update(ref(db, `candidates/${safeId}`), { score: Math.floor(Math.random()*40)+60 });
+
+    if(window.currentMode === 'AI') setTimeout(window.askAIQuestion, 1500);
+  };
+
+  window.askAIQuestion = () => {
+    onValue(ref(db, 'settings/questionBank'), (snap) => {
+      const bank = snap.val() || [];
+      if(bank.length) {
+        const q = bank[Math.floor(Math.random()*bank.length)];
+        window.addMsg('AI_SYSTEM', q);
+      }
+    }, {onlyOnce: true});
+  };
+
+  window.addMsg = (sender, msg) => {
+    const box = document.getElementById('interaction-box');
+    box.innerHTML += `<div class="self-start mr-20"><div class="text-[9px] uppercase font-bold text-slate-500 mb-1">${sender}</div><div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-sm">${msg}</div></div>`;
     box.scrollTop = box.scrollHeight;
   };
 
-  window.renderUserBubble = (msg) => {
-    const box = document.getElementById('interaction-box');
-    const div = document.createElement('div');
-    div.className = "max-w-[80%] self-end text-right animate-fade-in";
-    div.innerHTML = `
-      <div class="text-[9px] font-bold text-yellow-500 mb-1 uppercase">Candidate (You)</div>
-      <div class="bg-yellow-500 text-black p-4 rounded-2xl rounded-tr-none text-sm font-medium shadow-xl">${msg}</div>
-    `;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
+  window.pushLiveQuestion = () => {
+    if(!window.activeTarget) return alert("Select a target student first!");
+    const q = document.getElementById('live-qn-input').value;
+    set(ref(db, `candidates/${window.activeTarget.replace(/\./g,'_')}/liveQuestion`), q);
+    document.getElementById('live-qn-input').value = '';
   };
 
-  // File Parsing to Cloud Question Bank
+  // --- FILE UPLOADER (PDF/DOCX) ---
   const uploader = document.getElementById('file-uploader');
   uploader.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if(!file) return;
-    document.getElementById('parse-status').innerText = "Processing File...";
-    let text = "";
-    if(file.name.endsWith('.txt')) text = await file.text();
-    else if(file.name.endsWith('.docx')) {
+    let rawText = "";
+    document.getElementById('parse-status').innerText = "Reading File...";
+
+    if(file.name.endsWith('.txt')) {
+      rawText = await file.text();
+    } else if(file.name.endsWith('.docx')) {
       const res = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-      text = res.value;
+      rawText = res.value;
+    } else if(file.name.endsWith('.pdf')) {
+      const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      for(let i=1; i<=pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        rawText += content.items.map(it => it.str).join(' ') + "\n";
+      }
     }
-    // Simple logic: split by line or question mark
-    const questions = text.split(/[?\n]/).map(q => q.trim()).filter(q => q.length > 15);
+    const questions = rawText.split(/[?\n\r]/).map(q => q.trim()).filter(q => q.length > 20);
     set(ref(db, 'settings/questionBank'), questions);
-    document.getElementById('parse-status').innerText = questions.length + " Questions Synced to Cloud";
+    document.getElementById('parse-status').innerText = `Loaded: ${questions.length} Questions`;
   });
 
+  // Security: Tab switch
+  window.onblur = () => {
+    if(!window.userUID) return;
+    update(ref(db, `candidates/${window.userUID.replace(/\./g,'_')}`), { violations: 99 }); // Immediate flag
+  };
 </script>
 </body>
 </html>
