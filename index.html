@@ -1,347 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APT-E | Placement Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+<meta charset="UTF-8">
+<title>APT-E System | Pro Placement Portal</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<style>
+/* --- APT-E CYBERPUNK THEME (Based on Focus Watchdog) --- */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#020617; color:#e5e7eb}
+.app{display:grid;grid-template-columns:300px 1fr;height:100vh}
+
+/* SIDEBAR & PROCTORING */
+.sidebar{padding:20px; border-right:1px solid #1e293b; display:flex; flex-direction:column; background:#0f172a;}
+.proctor-box { width:100%; height:180px; background:#000; border-radius:12px; border:2px solid #1e293b; margin-bottom:15px; overflow:hidden; position:relative; }
+#video { width:100%; height:100%; object-fit:cover; }
+.violation-badge { position:absolute; top:5px; right:5px; background:#7f1d1d; color:#fca5a5; padding:2px 8px; font-size:10px; font-weight:800; border-radius:4px; }
+
+/* CHAT INTERFACE */
+.main{padding:24px; display:flex; flex-direction:column; gap:20px;}
+.interview-container { flex-grow:1; background:#020617; border:1px solid #334155; border-radius:20px; display:flex; flex-direction:column; overflow:hidden; }
+.chat-window { flex-grow:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
+.bubble { max-width:80%; padding:12px 18px; border-radius:18px; font-size:14px; line-height:1.5; }
+.ai-bubble { background:#1e293b; color:#7dd3fc; align-self:flex-start; border-bottom-left-radius:2px; border:1px solid #38bdf844; }
+.user-bubble { background:#1e40af; color:#fff; align-self:flex-end; border-bottom-right-radius:2px; }
+
+/* SPEEDOMETER (Interview Rating) */
+.speedo-container { background:#0f172a; padding:20px; border-radius:20px; border:1px solid #334155; text-align:center; }
+.speedo{ width:200px;height:100px;border-radius:200px 200px 0 0; background:conic-gradient(from -90deg, #ef4444, #facc15, #22c55e); position:relative; margin: 0 auto; }
+.needle{ position:absolute;width:3px;height:80px; background:#fff; left:50%; bottom:0; transform-origin:bottom center; transition:.6s cubic-bezier(.15,.85,.2,1) }
+
+/* BUTTONS */
+.action-btn { width:100%; padding:15px; background:#0ea5e9; border:none; border-radius:12px; color:#fff; font-weight:800; cursor:pointer; text-transform:uppercase; transition:0.2s; }
+.action-btn:active { transform:scale(0.98); }
+.action-btn.recording { background:#ef4444; animation: pulse 1.5s infinite; }
+
+@keyframes pulse { 0% { opacity:1; } 50% { opacity:0.7; } 100% { opacity:1; } }
+.hidden { display:none !important; }
+</style>
 </head>
-<body class="bg-gray-950 text-white selection:bg-blue-500">
+<body>
 
-    <div id="lockScreen" class="hidden fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center text-center">
-        <h1 class="text-8xl font-black text-red-600 animate-pulse">TERMINATED</h1>
-        <p class="text-2xl mt-4 text-gray-400">5 Violations: Exam Access Revoked.</p>
-        <p class="text-sm text-gray-600 mt-2">Only System Admin can reset this session.</p>
+<div class="app">
+    <div class="sidebar">
+        <h2 style="color:#7dd3fc; text-align:center; letter-spacing:2px; font-size:18px;">APT-E PRO</h2>
+        
+        <div class="proctor-box">
+            <video id="video" autoplay muted></video>
+            <div id="vBadge" class="violation-badge">VIOLATIONS: 0/5</div>
+        </div>
+
+        <div class="speedo-container">
+            <div class="speedo"><div id="needle" class="needle" style="transform: rotate(-90deg)"></div></div>
+            <div id="scoreLabel" style="font-size:24px; font-weight:900; color:#38bdf8; margin-top:10px;">0%</div>
+            <div id="ratingLabel" style="font-size:12px; color:#94a3b8; text-transform:uppercase;">Interview Grade</div>
+        </div>
+
+        <div style="flex-grow:1"></div>
+        <button class="action-btn" style="background:#1e293b; margin-bottom:10px;" onclick="location.reload()">🔄 Soft Refresh</button>
+        <button id="loginBtn" class="action-btn" onclick="handleLogin()">Secure Login</button>
     </div>
 
-    <header class="p-4 bg-gray-900 border-b border-gray-800 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex items-center gap-3">
-            <div class="w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
-            <h1 class="text-xl font-bold tracking-widest text-blue-400">APT-E SYSTEM</h1>
-        </div>
-        <div class="flex gap-6 items-center">
-            <div id="violationTag" class="text-sm font-mono px-3 py-1 bg-red-900/20 border border-red-500/50 text-red-500 rounded">VIOLATIONS: 0/5</div>
-            <span id="connectionStatus" class="text-xs text-gray-500">FIREBASE CONNECTED</span>
-        </div>
-    </header>
-<div id="admin-portal" class="p-6 bg-gray-950 min-h-screen">
-    <div class="grid grid-cols-12 gap-6">
-        
-        <div class="col-span-4 bg-gray-900 p-5 rounded-2xl border border-gray-800">
-            <h2 class="text-blue-400 font-bold mb-4">Interview Setup</h2>
-            <div class="border-2 border-dashed border-gray-700 p-6 rounded-xl text-center">
-                <input type="file" id="jsonUpload" class="hidden" onchange="loadBank(event)">
-                <label for="jsonUpload" class="cursor-pointer text-sm text-gray-500">Upload Answer Key (JSON)</label>
+    <div class="main">
+        <div class="interview-container">
+            <div id="chatWindow" class="chat-window">
+                <div class="bubble ai-bubble">
+                    <strong>SYSTEM AI:</strong> Welcome candidate. Please click "Start Answering" and state your name to begin the technical evaluation.
+                </div>
             </div>
-            <div id="bankList" class="mt-4 space-y-2 max-h-60 overflow-auto">
-                </div>
-        </div>
-
-        <div class="col-span-8 bg-gray-900 p-5 rounded-2xl border border-gray-800">
-            <h2 class="text-green-400 font-bold mb-4">Live Marking Feed</h2>
-            <div id="liveFeed" class="space-y-4">
-                <div class="bg-black p-4 rounded-xl border border-blue-900/30">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-gray-500">CANDIDATE: Soham Pal</span>
-                        <span id="liveScore" class="text-xl font-black text-blue-500">Score: --%</span>
-                    </div>
-                    <div class="bg-gray-800 h-2 w-full rounded-full overflow-hidden">
-                        <div id="scoreBar" class="bg-blue-500 h-full w-0 transition-all duration-500"></div>
-                    </div>
-                    <p id="adminTranscript" class="mt-4 text-sm italic text-gray-400 font-mono">Waiting for student to speak...</p>
-                </div>
+            
+            <div style="padding:20px; background:#0f172a; border-top:1px solid #334155;">
+                <div id="sttPreview" style="font-size:12px; color:#64748b; font-style:italic; margin-bottom:10px;">Waiting for voice input...</div>
+                <button id="micBtn" class="action-btn" onclick="toggleMic()">🎤 Start Answering</button>
             </div>
         </div>
 
+        <div id="uploadBox" class="speedo-container" style="text-align:left">
+            <h4 style="margin:0 0 10px 0; color:#38bdf8">SUBMIT RECRUITMENT DOCS</h4>
+            <input type="file" id="fileInp" style="font-size:12px;">
+            <button onclick="uploadDoc()" style="background:#334155; padding:5px 10px; border:none; border-radius:4px; color:#fff; cursor:pointer;">Upload PDF/DOCX</button>
+        </div>
     </div>
 </div>
-    <main class="p-6 max-w-[1600px] mx-auto grid grid-cols-12 gap-6">
-        
-        <div class="col-span-12 lg:col-span-4 space-y-6">
-            <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl relative">
-                <video id="video" autoplay muted class="w-full h-64 object-cover grayscale hover:grayscale-0 transition-all"></video>
-                <canvas id="canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
-                <div class="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-[10px] font-bold">AI VISION ACTIVE</div>
-            </div>
 
-            <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-                <h2 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">Recruitment Docs (PDF/DOCX)</h2>
-                <input type="file" id="filePicker" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
-                <button onclick="uploadDocument()" class="w-full mt-4 bg-gray-800 hover:bg-blue-700 py-2 rounded-lg text-sm transition-colors">Upload to Storage</button>
-                <div id="upStatus" class="mt-2 text-[10px] text-center text-gray-500 italic"></div>
-            </div>
-        </div>
+<div id="lockScreen" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,6,23,0.98); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+    <h1 style="color:#ef4444; font-size:48px; margin:0;">EXAM TERMINATED</h1>
+    <p style="color:#94a3b8;">5 Violations detected. Contact admin@study.com to reset.</p>
+    <button onclick="location.reload()" class="action-btn" style="width:200px; margin-top:20px;">Return</button>
+</div>
 
-        <div class="col-span-12 lg:col-span-8 flex flex-col bg-gray-900 rounded-2xl border border-gray-800 h-[75vh] shadow-2xl">
-            <div id="chatDisplay" class="flex-grow p-6 overflow-y-auto space-y-6">
-                <div class="flex flex-col items-start">
-                    <div class="bg-blue-600/10 border border-blue-500/20 p-4 rounded-2xl rounded-tl-none max-w-[85%]">
-                        <p class="text-xs font-bold text-blue-400 mb-1">SYSTEM INTERVIEWER</p>
-                        <p id="promptText">Initializing AI Mode... I will ask questions, and you must answer using your voice. Please look directly at the camera.</p>
-                    </div>
-                </div>
-            </div>
+<script>
+// --- CONFIGURATION ---
+const firebaseConfig = {
+  apiKey: "AIzaSyD16NhAUgo3sgag01nZPZGHXjMvAZZ0rDE",
+  databaseURL: "https://focus-dashboard-5965a-default-rtdb.firebaseio.com",
+  projectId: "focus-dashboard-5965a",
+  storageBucket: "focus-dashboard-5965a.appspot.com",
+};
 
-            <div class="p-6 bg-gray-800/30 border-t border-gray-800">
-                <div id="speechPreview" class="text-sm text-blue-300/50 mb-3 italic min-h-[1.2rem]">Waiting for voice...</div>
-                <button id="recordBtn" onclick="toggleRecording()" class="w-full bg-blue-600 hover:bg-blue-500 h-16 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all transform active:scale-95">
-                    <span id="recordIcon" class="w-3 h-3 bg-white rounded-full"></span>
-                    <span id="recordLabel">START ANSWERING</span>
-                </button>
-            </div>
-        </div>
-    </main>
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let violations = 0;
+let isRecording = false;
+let studentId = "soham_pal";
 
-    <script>
-        // --- 1. FIREBASE INITIALIZATION (Using your Provided Config) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
-            authDomain: "placement-96094.firebaseapp.com",
-            databaseURL: "https://placement-96094-default-rtdb.firebaseio.com",
-            projectId: "placement-96094",
-            storageBucket: "placement-96094.firebasestorage.app",
-            messagingSenderId: "1061247846675",
-            appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const storage = firebase.storage();
+// --- AI MARKING ENGINE (From Your IoT PDF) ---
+const answerKey = {
+    "iot": ["sensors", "interconnected", "network", "data", "internet"],
+    "m2m": ["machine", "point-to-point", "closed", "wired"],
+    "cryptography": ["encryption", "decryption", "keys", "security"]
+};
 
-        // --- 2. GLOBAL STATE ---
-        let violations = 0;
-        let isRecording = false;
-        const userId = "Student_Soham_Pal"; // Example ID
-
-        // --- 3. AI PROCTORING ENGINE ---
-        async function startProctoring() {
+// --- PROCTORING LOGIC ---
+async function startProctoring() {
     const model = await cocoSsd.load();
     const video = document.getElementById('video');
     
     setInterval(async () => {
         const predictions = await model.detect(video);
-        let phoneFound = false;
-        let persons = 0;
-        let forbiddenObject = false;
+        let phoneFound = predictions.some(p => p.class === 'cell phone');
+        let persons = predictions.filter(p => p.class === 'person').length;
 
-        predictions.forEach(p => {
-            // 1. Check for Phones or Tablets
-            if (p.class === 'cell phone' || p.class === 'laptop') phoneFound = true;
-            
-            // 2. Check for Multiple People
-            if (p.class === 'person') persons++;
-
-            // 3. Check for "Hidden" aids
-            if (p.class === 'book') forbiddenObject = true;
-        });
-
-        // Trigger Violations
-        if (phoneFound) handleViolation("Electronic Device Detected");
-        if (persons > 1) handleViolation("Multiple People in Frame");
-        if (persons === 0) handleViolation("Candidate Out of Frame");
-        if (forbiddenObject) handleViolation("Unauthorized Materials (Book/Paper)");
-
-    }, 3000); // Scans every 3 seconds
-}
-
-        function handleViolation(reason) {
+        if (phoneFound || persons > 1 || persons === 0) {
             violations++;
-            document.getElementById('violationTag').innerText = `VIOLATIONS: ${violations}/5`;
-            db.ref(`live_sessions/${userId}/status`).update({ violations, last_reason: reason });
-            
-            if (violations >= 5) {
-                document.getElementById('lockScreen').classList.remove('hidden');
-                speak("Exam cancelled due to violations.");
-            }
+            document.getElementById('vBadge').innerText = `VIOLATIONS: ${violations}/5`;
+            if (violations >= 5) terminateExam();
         }
-
-        // --- 4. SPEECH & INTERVIEW LOGIC ---
-        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const rec = new Recognition();
-        rec.continuous = true;
-        rec.interimResults = true;
-
-        function toggleRecording() {
-            if (!isRecording) {
-                rec.start();
-                document.getElementById('recordLabel').innerText = "SUBMIT ANSWER";
-                document.getElementById('recordBtn').classList.replace('bg-blue-600', 'bg-red-600');
-            } else {
-                rec.stop();
-                submitResponse();
-                document.getElementById('recordLabel').innerText = "START ANSWERING";
-                document.getElementById('recordBtn').classList.replace('bg-red-600', 'bg-blue-600');
-            }
-            isRecording = !isRecording;
-        }
-
-        rec.onresult = (e) => {
-            const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
-            document.getElementById('speechPreview').innerText = transcript;
-        };
-
-        function submitResponse() {
-            const text = document.getElementById('speechPreview').innerText;
-            if(!text || text === "Waiting for voice...") return;
-
-            addMessage("You", text, "bg-gray-800");
-            db.ref(`live_sessions/${userId}/answers`).push({ text, timestamp: Date.now() });
-            document.getElementById('speechPreview').innerText = "Waiting for voice...";
-        }
-
-        function addMessage(user, text, style) {
-            const chat = document.getElementById('chatDisplay');
-            const msg = `
-                <div class="flex flex-col ${user === 'You' ? 'items-end' : 'items-start'} animate-fadeIn">
-                    <div class="${style} p-4 rounded-2xl max-w-[85%] border border-white/5 shadow-xl">
-                        <p class="text-[10px] font-bold opacity-40 mb-1 uppercase">${user}</p>
-                        <p class="text-sm">${text}</p>
-                    </div>
-                </div>`;
-            chat.innerHTML += msg;
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // --- 5. LIVE MODE LISTENER ---
-        // Listen for Admin questions
-        db.ref(`live_sessions/${userId}/current_qn`).on('value', (snap) => {
-            const qn = snap.val();
-            if (qn) {
-                addMessage("Interviewer", qn, "bg-blue-600/20 border-blue-500/30");
-                speak(qn);
-            }
-        });
-        // --- ADMIN CORE FUNCTIONS ---
-
-// 1. Upload Question Bank (JSON)
-function handleQnUpload(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const qnBank = JSON.parse(e.target.result);
-            // Save to Firebase
-            db.ref('settings/question_bank').set(qnBank);
-            
-            const statusDiv = document.getElementById('qnStatus');
-            statusDiv.classList.remove('hidden');
-            statusDiv.innerText = `Uploaded: ${qnBank.length} Questions Successfully.`;
-        } catch (err) {
-            alert("Error: Invalid JSON format. Please check the file.");
-        }
-    };
-    reader.readAsText(file);
+    }, 3000);
 }
 
-// 2. Control Regulations
-function toggleRegulation(type, status) {
-    db.ref(`settings/regulations/${type}`).set(status);
+function terminateExam() {
+    document.getElementById('lockScreen').classList.remove('hidden');
 }
 
-// 3. Live Question Pushing
-document.getElementById('liveQnInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const studentId = "STUDENT_001"; // In real use, map this to the specific candidate card
-        const question = e.target.value;
-        
-        if(question.trim() !== "") {
-            db.ref(`live_sessions/${studentId}/current_qn`).set(question);
-            e.target.value = "";
-            console.log("Question pushed to Firebase.");
-        }
+// --- VOICE & CHAT LOGIC ---
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.continuous = true;
+recognition.interimResults = true;
+
+function toggleMic() {
+    const btn = document.getElementById('micBtn');
+    if (!isRecording) {
+        recognition.start();
+        btn.innerText = "⏹ Stop & Submit";
+        btn.classList.add('recording');
+    } else {
+        recognition.stop();
+        btn.innerText = "🎤 Start Answering";
+        btn.classList.remove('recording');
+        processResponse(document.getElementById('sttPreview').innerText);
     }
-});
-
-// 4. Reset Student Status (Admin Override)
-function resetStudent(studentId) {
-    if(confirm(`Unlock access for ${studentId}?`)) {
-        db.ref(`live_sessions/${studentId}/status`).update({
-            violations: 0,
-            last_reason: "Reset by Admin"
-        });
-        alert("Student Unblocked.");
-    }
+    isRecording = !isRecording;
 }
 
-// 5. Global Rule UI Toggle
-function toggleGlobalRule(rule) {
-    const btn = document.getElementById(`rule-${rule}`);
-    // Logic to toggle proctoring state in Firebase and update UI
-    db.ref(`settings/regulations/${rule}`).transaction(current => {
-        const newVal = !current;
-        btn.innerText = `AI PROCTOR: ${newVal ? 'ON' : 'OFF'}`;
-        btn.className = newVal ? 'px-3 py-1 bg-green-900/30 border border-green-500 text-green-500 text-xs rounded-full' 
-                               : 'px-3 py-1 bg-red-900/30 border border-red-500 text-red-500 text-xs rounded-full';
-        return newVal;
-    });
+recognition.onresult = (event) => {
+    const text = Array.from(event.results).map(r => r[0].transcript).join('');
+    document.getElementById('sttPreview').innerText = text;
+};
+
+function processResponse(text) {
+    const chat = document.getElementById('chatWindow');
+    chat.innerHTML += `<div class="bubble user-bubble">${text}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+
+    // Automated Marking Logic
+    let score = 0;
+    const words = text.toLowerCase();
+    answerKey["iot"].forEach(kw => { if(words.includes(kw)) score += 20; });
+    
+    updateSpeedo(score);
+    db.ref(`interviews/${studentId}/last_answer`).set({ text, score, time: Date.now() });
 }
-// Function to run when Student finishes speaking
-function processMarking(studentSpeech, questionId) {
-    // 1. Fetch data from your JSON bank
-    const questionData = questionBank.find(q => q.id === questionId);
-    if (!questionData) return;
 
-    const transcript = studentSpeech.toLowerCase();
-    const keywords = questionData.keywords;
-    let matchCount = 0;
+function updateSpeedo(percent) {
+    const rotation = (percent / 100) * 180 - 90;
+    document.getElementById('needle').style.transform = `rotate(${rotation}deg)`;
+    document.getElementById('scoreLabel').innerText = percent + "%";
+}
+// Marking Logic for Any Subject
+window.calculateDynamicScore = async function(transcript, currentSubject) {
+    const snap = await get(ref(db, `settings/subjects/${currentSubject}/keywords`));
+    if (!snap.exists()) return 0;
 
-    // 2. Scan transcript for keywords from PDF
+    const keywords = snap.val(); // List of keywords from your uploaded PDF
+    const studentText = transcript.toLowerCase();
+    let matches = 0;
+
     keywords.forEach(word => {
-        if (transcript.includes(word.toLowerCase())) {
-            matchCount++;
+        if (studentText.includes(word.toLowerCase())) {
+            matches++;
         }
     });
 
-    // 3. Calculate Final Marks
-    const rawScore = (matchCount / keywords.length);
-    const finalMarks = (rawScore * questionData.totalMarks).toFixed(1);
-    const percentage = (rawScore * 100).toFixed(0);
-
-    // 4. Update Admin Dashboard
-    document.getElementById('liveScore').innerText = `Score: ${percentage}%`;
-    document.getElementById('scoreBar').style.width = `${percentage}%`;
-    document.getElementById('adminTranscript').innerText = studentSpeech;
-
-    // 5. Save to Firebase
-    db.ref(`live_sessions/${userId}/results`).push({
-        question: questionData.question,
-        studentAnswer: studentSpeech,
-        marksAwarded: finalMarks,
-        totalPossible: questionData.totalMarks,
-        timestamp: Date.now()
+    // Score = (Matches / Total Keywords) * 100
+    return Math.round((matches / keywords.length) * 100);
+};
+// --- INITIALIZE ---
+window.onload = () => {
+    navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
+        document.getElementById('video').srcObject = s;
+        startProctoring();
     });
-}
-        // --- 6. FILE UPLOAD ---
-        async function uploadDocument() {
-            const file = document.getElementById('filePicker').files[0];
-            if (!file) return;
-            const upRef = storage.ref(`users/${userId}/docs/${file.name}`);
-            document.getElementById('upStatus').innerText = "Uploading to Firebase...";
-            await upRef.put(file);
-            document.getElementById('upStatus').innerText = "Upload Successful!";
+    
+    // Admin Live Question Listener
+    db.ref(`interviews/${studentId}/live_qn`).on('value', (snap) => {
+        const qn = snap.val();
+        if(qn) {
+            const chat = document.getElementById('chatWindow');
+            chat.innerHTML += `<div class="bubble ai-bubble"><strong>INTERVIEWER:</strong> ${qn}</div>`;
+            const msg = new SpeechSynthesisUtterance(qn);
+            window.speechSynthesis.speak(msg);
         }
-
-        // Initialize App
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-            document.getElementById('video').srcObject = stream;
-            startProctoring();
-        });
-    </script>
-
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.3s ease forwards; }
-    </style>
+    });
+};
+</script>
 </body>
 </html>
