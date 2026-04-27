@@ -1,244 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>APT-E System | Pro Placement Portal</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
-
-    <style>
-        /* --- APT-E CYBERPUNK THEME --- */
-        *{box-sizing:border-box}
-        html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#020617; color:#e5e7eb}
-        .app{display:grid;grid-template-columns:300px 1fr;height:100vh}
-
-        .sidebar{padding:20px; border-right:1px solid #1e293b; display:flex; flex-direction:column; background:#0f172a;}
-        .proctor-box { width:100%; height:180px; background:#000; border-radius:12px; border:2px solid #1e293b; margin-bottom:15px; overflow:hidden; position:relative; }
-        #video { width:100%; height:100%; object-fit:cover; }
-        .violation-badge { position:absolute; top:5px; right:5px; background:#7f1d1d; color:#fca5a5; padding:2px 8px; font-size:10px; font-weight:800; border-radius:4px; }
-
-        .main{padding:24px; display:flex; flex-direction:column; gap:20px;}
-        .interview-container { flex-grow:1; background:#020617; border:1px solid #334155; border-radius:20px; display:flex; flex-direction:column; overflow:hidden; }
-        .chat-window { flex-grow:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
-        .bubble { max-width:80%; padding:12px 18px; border-radius:18px; font-size:14px; line-height:1.5; margin-bottom: 10px; }
-        .ai-bubble { background:#1e293b; color:#7dd3fc; align-self:flex-start; border-bottom-left-radius:2px; border:1px solid #38bdf844; }
-        .user-bubble { background:#1e40af; color:#fff; align-self:flex-end; border-bottom-right-radius:2px; }
-
-        .speedo-container { background:#0f172a; padding:20px; border-radius:20px; border:1px solid #334155; text-align:center; }
-        .speedo{ width:200px;height:100px;border-radius:200px 200px 0 0; background:conic-gradient(from -90deg, #ef4444, #facc15, #22c55e); position:relative; margin: 0 auto; }
-        .needle{ position:absolute;width:3px;height:80px; background:#fff; left:50%; bottom:0; transform-origin:bottom center; transition:.6s cubic-bezier(.15,.85,.2,1) }
-
-        .action-btn { width:100%; padding:15px; background:#0ea5e9; border:none; border-radius:12px; color:#fff; font-weight:800; cursor:pointer; text-transform:uppercase; transition:0.2s; }
-        .action-btn:hover { background: #0284c7; }
-        .action-btn.recording { background:#ef4444; animation: pulse 1.5s infinite; }
-
-        @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.7; } 100% { opacity:1; } }
-        .hidden { display:none !important; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecruitPro CBT Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="bg-slate-950 text-white font-sans">
 
-<div class="app">
-    <div class="sidebar">
-        <h2 style="color:#7dd3fc; text-align:center; letter-spacing:2px; font-size:18px;">APT-E PRO</h2>
-        
-        <div class="proctor-box">
-            <video id="video" autoplay muted></video>
-            <div id="vBadge" class="violation-badge">VIOLATIONS: 0/5</div>
-        </div>
-
-        <div class="speedo-container">
-            <div class="speedo"><div id="needle" class="needle" style="transform: rotate(-90deg)"></div></div>
-            <div id="scoreLabel" style="font-size:24px; font-weight:900; color:#38bdf8; margin-top:10px;">0%</div>
-            <div id="ratingLabel" style="font-size:12px; color:#94a3b8; text-transform:uppercase;">Interview Grade</div>
-        </div>
-
-        <div style="flex-grow:1"></div>
-        <button class="action-btn" style="background:#1e293b; margin-bottom:10px;" onclick="location.reload()">🔄 Soft Refresh</button>
-        <button id="loginBtn" class="action-btn" onclick="handleLoginFlow()">Secure Login</button>
+  <!-- Navbar -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+      <h1 class="text-2xl font-bold text-cyan-400">RecruitPro Portal</h1>
+      <nav class="space-x-6 hidden md:flex">
+        <a href="#home" class="hover:text-cyan-400">Home</a>
+        <a href="#features" class="hover:text-cyan-400">Features</a>
+        <a href="#exams" class="hover:text-cyan-400">Mock Tests</a>
+        <a href="#interview" class="hover:text-cyan-400">Interview</a>
+        <a href="#contact" class="hover:text-cyan-400">Contact</a>
+      </nav>
+      <div class="space-x-3">
+        <button onclick="showLogin()" class="px-4 py-2 bg-cyan-500 rounded-xl hover:bg-cyan-600">Login</button>
+        <button onclick="showRegister()" class="px-4 py-2 bg-green-500 rounded-xl hover:bg-green-600">Register</button>
+      </div>
     </div>
+  </header>
 
-    <div class="main">
-        <div id="student-portal" class="interview-container">
-            <div id="chatWindow" class="chat-window">
-                <div class="bubble ai-bubble">
-                    <strong>SYSTEM AI:</strong> Welcome candidate. Please click "Start Answering" to begin your technical evaluation.
-                </div>
-            </div>
-            
-            <div style="padding:20px; background:#0f172a; border-top:1px solid #334155;">
-                <div id="sttPreview" style="font-size:12px; color:#38bdf8; font-style:italic; margin-bottom:10px;">Waiting for voice input...</div>
-                <button id="micBtn" class="action-btn" onclick="toggleMic()">🎤 Start Answering</button>
-            </div>
-        </div>
+  <!-- Hero Section -->
+  <section id="home" class="py-20 px-6 text-center bg-gradient-to-b from-slate-900 to-slate-950">
+    <h2 class="text-5xl font-extrabold mb-6">Complete Recruitment Mock Test Platform</h2>
+    <p class="text-slate-300 text-lg max-w-3xl mx-auto mb-8">
+      Practice MCQ exams, technical rounds, coding challenges, and HR interviews for SSC, Railway, GATE, TCS, Infosys, Wipro, and more.
+    </p>
+    <button class="px-8 py-4 bg-cyan-500 rounded-2xl text-lg font-semibold hover:bg-cyan-600">Start Mock Test</button>
+  </section>
 
-        <div id="admin-portal" class="hidden speedo-container" style="text-align:left;">
-            <h3 style="color:#a855f7">ADMIN COMMAND CENTER</h3>
-            <p style="font-size:12px; color:#94a3b8">Manage Subject Keywords & Monitor Live Feed</p>
-            <button class="action-btn" style="background:#450a0a; margin-top:10px;" onclick="resetViolations()">Reset Student Violations</button>
-        </div>
-
-        <div id="uploadBox" class="speedo-container" style="text-align:left">
-            <h4 style="margin:0 0 10px 0; color:#38bdf8">SUBMIT RECRUITMENT DOCS</h4>
-            <input type="file" id="fileInp" style="font-size:12px;">
-            <button onclick="uploadDoc()" style="background:#334155; padding:5px 10px; border:none; border-radius:4px; color:#fff; cursor:pointer; margin-top:10px;">Upload PDF/DOCX</button>
-        </div>
+  <!-- Features -->
+  <section id="features" class="max-w-7xl mx-auto py-16 px-6">
+    <h3 class="text-4xl font-bold text-center mb-12 text-cyan-400">Platform Features</h3>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <h4 class="text-xl font-bold mb-4">Student Dashboard</h4>
+        <ul class="space-y-2 text-slate-300">
+          <li>• Live mock exams</li>
+          <li>• Performance analytics</li>
+          <li>• Subject progress tracking</li>
+          <li>• Leaderboard rankings</li>
+        </ul>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <h4 class="text-xl font-bold mb-4">Admin Dashboard</h4>
+        <ul class="space-y-2 text-slate-300">
+          <li>• Create/manage exams</li>
+          <li>• Bulk question upload</li>
+          <li>• Student monitoring</li>
+          <li>• Result export</li>
+        </ul>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <h4 class="text-xl font-bold mb-4">Interview Preparation</h4>
+        <ul class="space-y-2 text-slate-300">
+          <li>• HR interview practice</li>
+          <li>• Technical viva</li>
+          <li>• Coding rounds</li>
+          <li>• AI interview simulator</li>
+        </ul>
+      </div>
     </div>
-</div>
+  </section>
 
-<div id="lockScreen" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,6,23,0.98); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-    <h1 style="color:#ef4444; font-size:48px; margin:0;">EXAM TERMINATED</h1>
-    <p style="color:#94a3b8;">5 Violations detected. Contact admin@study.com to reset.</p>
-    <button onclick="location.reload()" class="action-btn" style="width:200px; margin-top:20px;">Return</button>
-</div>
+  <!-- Exams Section -->
+  <section id="exams" class="bg-slate-900 py-16 px-6">
+    <div class="max-w-7xl mx-auto">
+      <h3 class="text-4xl font-bold text-center mb-12 text-cyan-400">Popular Mock Exams</h3>
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="bg-slate-800 p-6 rounded-2xl text-center">SSC CHSL</div>
+        <div class="bg-slate-800 p-6 rounded-2xl text-center">Railway CBT</div>
+        <div class="bg-slate-800 p-6 rounded-2xl text-center">GATE Technical</div>
+        <div class="bg-slate-800 p-6 rounded-2xl text-center">Campus Placement</div>
+      </div>
+    </div>
+  </section>
 
-<script>
-// --- CONFIGURATION ---
-const firebaseConfig = {
-    apiKey: "AIzaSyD16NhAUgo3sgag01nZPZGHXjMvAZZ0rDE",
-    databaseURL: "https://focus-dashboard-5965a-default-rtdb.firebaseio.com",
-    projectId: "focus-dashboard-5965a",
-    storageBucket: "focus-dashboard-5965a.appspot.com",
-};
+  <!-- Dashboard Preview -->
+  <section class="max-w-7xl mx-auto py-16 px-6">
+    <h3 class="text-4xl font-bold text-center mb-12 text-cyan-400">Performance Analytics</h3>
+    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+      <canvas id="performanceChart"></canvas>
+    </div>
+  </section>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const auth = firebase.auth();
+  <!-- Interview -->
+  <section id="interview" class="py-16 px-6 bg-slate-900">
+    <div class="max-w-7xl mx-auto text-center">
+      <h3 class="text-4xl font-bold mb-8 text-cyan-400">Mock Interview System</h3>
+      <p class="text-slate-300 mb-8 max-w-3xl mx-auto">
+        Practice HR questions, technical interviews, and company-specific placement rounds with structured feedback.
+      </p>
+      <button class="px-8 py-4 bg-purple-500 rounded-2xl hover:bg-purple-600">Start Interview Practice</button>
+    </div>
+  </section>
 
-let violations = 0;
-let isRecording = false;
-let studentId = "soham_pal";
-let currentSubject = "iot"; 
+  <!-- Login Modal -->
+  <div id="loginModal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+    <div class="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-slate-700">
+      <h3 class="text-2xl font-bold mb-2">Login</h3>
+      <p class="text-sm text-slate-400 mb-4">Secure role-based login with Firebase/Node backend integration required for production deployment.</p>
+      <input id="loginEmail" type="email" placeholder="Email" class="w-full mb-4 p-3 rounded bg-slate-800 border border-slate-700">
+      <input id="loginPassword" type="password" placeholder="Password" class="w-full mb-4 p-3 rounded bg-slate-800 border border-slate-700">
+      <button onclick="secureLogin()" class="w-full py-3 bg-cyan-500 rounded-xl hover:bg-cyan-600">Secure Login</button>
+      <button onclick="closeLogin()" class="w-full mt-3 py-2 bg-red-500 rounded-xl">Close</button>
+    </div>
+  </div>
 
-// --- VOICE RECOGNITION (Internshala Style) ---
-const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognizer = new SpeechRec();
-recognizer.continuous = true;
-recognizer.interimResults = true;
+  <!-- Register Modal -->
+  <div id="registerModal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+    <div class="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-slate-700">
+      <h3 class="text-2xl font-bold mb-6">Student Registration</h3>
+      <input id="registerName" type="text" placeholder="Full Name" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700">
+      <input id="registerEmail" type="email" placeholder="Email" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700">
+      <input id="registerPassword" type="password" placeholder="Password" class="w-full mb-3 p-3 rounded bg-slate-800 border border-slate-700">
+      <button onclick="registerStudent()" class="w-full py-3 bg-green-500 rounded-xl hover:bg-green-600">Create Account</button>
+      <button onclick="closeRegister()" class="w-full mt-3 py-2 bg-red-500 rounded-xl">Close</button>
+    </div>
+  </div>
 
-window.toggleMic = function() {
-    const btn = document.getElementById('micBtn');
-    const preview = document.getElementById('sttPreview');
+  <!-- Footer -->
+  <footer id="contact" class="bg-slate-950 border-t border-slate-800 py-8 text-center text-slate-400">
+    <p>© 2026 RecruitPro CBT Portal | Built for Recruitment, Placement & Competitive Exams</p>
+  </footer>
 
-    if (!isRecording) {
-        recognizer.start();
-        isRecording = true;
-        btn.innerText = "⏹ Stop & Submit";
-        btn.classList.add('recording');
-    } else {
-        recognizer.stop();
-        isRecording = false;
-        btn.innerText = "🎤 Start Answering";
-        btn.classList.remove('recording');
-        
-        const text = preview.innerText;
-        if (text && text !== "Waiting for voice input...") {
-            renderChatBubble("You", text, "user-bubble");
-            calculateMarks(text);
-        }
+  <!-- Student Dashboard -->
+  <section id="studentPortal" class="hidden max-w-7xl mx-auto py-16 px-6">
+    <h3 class="text-4xl font-bold text-cyan-400 mb-8 text-center">Student Dashboard</h3>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <h4 class="font-bold mb-4">Available Exams</h4>
+        <ul class="space-y-2 text-slate-300">
+          <li>• SSC Mock Test</li>
+          <li>• Railway CBT</li>
+          <li>• Technical Core Exam</li>
+          <li>• HR Interview Round</li>
+        </ul>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <h4 class="font-bold mb-4">Performance</h4>
+        <p class="text-slate-300">Average Score: 84%</p>
+        <p class="text-slate-300">National Rank: 152</p>
+        <p class="text-slate-300">Completed Exams: 24</p>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <h4 class="font-bold mb-4">Quick Actions</h4>
+        <button class="w-full py-3 bg-cyan-500 rounded-xl mb-3">Start Mock Test</button>
+        <button class="w-full py-3 bg-purple-500 rounded-xl">Interview Practice</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Admin Dashboard -->
+  <section id="adminPortal" class="hidden max-w-7xl mx-auto py-16 px-6">
+    <h3 class="text-4xl font-bold text-purple-400 mb-8 text-center">Admin Dashboard</h3>
+    <div class="grid md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
+        <p class="text-slate-400">Students</p>
+        <h4 class="text-3xl font-bold">2,540</h4>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
+        <p class="text-slate-400">Active Exams</p>
+        <h4 class="text-3xl font-bold">18</h4>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
+        <p class="text-slate-400">Interviews</p>
+        <h4 class="text-3xl font-bold">640</h4>
+      </div>
+      <div class="bg-slate-900 p-6 rounded-2xl text-center border border-slate-800">
+        <p class="text-slate-400">Revenue</p>
+        <h4 class="text-3xl font-bold">₹1.8L</h4>
+      </div>
+    </div>
+    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+      <h4 class="text-2xl font-bold mb-4">Admin Controls</h4>
+      <div class="grid md:grid-cols-3 gap-4">
+        <button class="py-3 bg-cyan-500 rounded-xl">Create Exam</button>
+        <button class="py-3 bg-green-500 rounded-xl">Manage Students</button>
+        <button class="py-3 bg-purple-500 rounded-xl">View Reports</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    function showLogin() {
+      document.getElementById('loginModal').classList.remove('hidden');
     }
-};
-
-recognizer.onresult = (event) => {
-    const transcript = Array.from(event.results).map(r => r[0].transcript).join('');
-    document.getElementById('sttPreview').innerText = transcript;
-};
-
-function renderChatBubble(sender, text, type) {
-    const chat = document.getElementById('chatWindow');
-    chat.innerHTML += `<div class="bubble ${type}"><strong>${sender}:</strong> ${text}</div>`;
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// --- DYNAMIC MARKING ENGINE ---
-async function calculateMarks(text) {
-    // Reference keywords from your IoT content
-    const keywords = ["sensors", "interconnected", "network", "data", "internet", "monitoring", "scalability"];
-    let matches = 0;
-    const words = text.toLowerCase();
-
-    keywords.forEach(kw => { if(words.includes(kw)) matches++; });
-
-    const score = Math.round((matches / keywords.length) * 100);
-    updateSpeedo(score);
-    
-    // Sync to Firebase for Admin to see Live
-    db.ref(`interviews/${studentId}/last_answer`).set({ text, score, time: Date.now() });
-}
-
-function updateSpeedo(percent) {
-    const rotation = (percent / 100) * 180 - 90;
-    document.getElementById('needle').style.transform = `rotate(${rotation}deg)`;
-    document.getElementById('scoreLabel').innerText = percent + "%";
-}
-
-// --- PROCTORING LOGIC ---
-async function startProctoring() {
-    const model = await cocoSsd.load();
-    const video = document.getElementById('video');
-    
-    setInterval(async () => {
-        const predictions = await model.detect(video);
-        let phoneFound = predictions.some(p => p.class === 'cell phone');
-        let persons = predictions.filter(p => p.class === 'person').length;
-
-        if (phoneFound || persons > 1 || persons === 0) {
-            violations++;
-            document.getElementById('vBadge').innerText = `VIOLATIONS: ${violations}/5`;
-            db.ref(`interviews/${studentId}/violations`).set(violations);
-            if (violations >= 5) document.getElementById('lockScreen').classList.remove('hidden');
-        }
-    }, 3000);
-}
-
-// --- AUTH & PORTAL SEPARATION ---
-window.handleLoginFlow = async function() {
-    const email = prompt("Enter Authorized Email:");
-    const password = prompt("Enter Password:");
-
-    try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-
-        if (user.email === "admin@study.com") {
-            document.getElementById("admin-portal").classList.remove("hidden");
-            alert("Admin Access Granted.");
-        } else {
-            alert("Student Session Restored.");
-        }
-    } catch (error) {
-        alert("Login Failed: " + error.message);
+    function closeLogin() {
+      document.getElementById('loginModal').classList.add('hidden');
     }
-};
+    function showRegister() {
+      document.getElementById('registerModal').classList.remove('hidden');
+    }
+    function closeRegister() {
+      document.getElementById('registerModal').classList.add('hidden');
+    }
 
-window.resetViolations = function() {
-    violations = 0;
-    document.getElementById('vBadge').innerText = "VIOLATIONS: 0/5";
-    document.getElementById('lockScreen').classList.add('hidden');
-    db.ref(`interviews/${studentId}/violations`).set(0);
-};
+    function secureLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
 
-// --- INITIALIZE WEBCAM ---
-window.onload = () => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
-        document.getElementById('video').srcObject = s;
-        startProctoring();
-    }).catch(err => alert("Camera access required for proctoring."));
-    
-    // Listen for Admin Live Questions
-    db.ref(`interviews/${studentId}/live_qn`).on('value', (snap) => {
-        const qn = snap.val();
-        if(qn) {
-            renderChatBubble("Interviewer", qn, "ai-bubble");
-            const msg = new SpeechSynthesisUtterance(qn);
-            window.speechSynthesis.speak(msg);
-        }
+      if (!email || !password) {
+        alert('Please enter email and password.');
+        return;
+      }
+
+      if (email === 'admin@recruitpro.com' && password === 'Admin@123') {
+        loadAdminPortal();
+      } else if (email === 'student@recruitpro.com' && password === 'Student@123') {
+        loadStudentPortal();
+      } else {
+        alert('Invalid credentials. Connect Firebase/Auth backend for real users.');
+      }
+    }
+
+    function registerStudent() {
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value.trim();
+
+      if (!name || !email || !password) {
+        alert('Please complete all fields.');
+        return;
+      }
+
+      localStorage.setItem('recruitpro_student', JSON.stringify({ name, email }));
+      alert('Registration successful. You can now login as student.');
+      closeRegister();
+    }
+
+    function loadStudentPortal() {
+      closeLogin();
+      document.getElementById('studentPortal').classList.remove('hidden');
+      document.getElementById('adminPortal').classList.add('hidden');
+      window.scrollTo({ top: document.getElementById('studentPortal').offsetTop, behavior: 'smooth' });
+    }
+
+    function loadAdminPortal() {
+      closeLogin();
+      document.getElementById('adminPortal').classList.remove('hidden');
+      document.getElementById('studentPortal').classList.add('hidden');
+      window.scrollTo({ top: document.getElementById('adminPortal').offsetTop, behavior: 'smooth' });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedStudent = localStorage.getItem('recruitpro_student');
+      if (savedStudent) {
+        console.log('Registered student profile loaded');
+      }
     });
-};
-</script>
+
+    const ctx = document.getElementById('performanceChart');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Aptitude', 'Reasoning', 'Technical', 'Coding', 'Interview'],
+        datasets: [{
+          label: 'Performance %',
+          data: [82, 75, 88, 70, 91],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: 'white' } }
+        },
+        scales: {
+          x: { ticks: { color: 'white' } },
+          y: { ticks: { color: 'white' }, beginAtZero: true, max: 100 }
+        }
+      }
+    });
+  </script>
+
 </body>
 </html>
