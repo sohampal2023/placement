@@ -49,7 +49,7 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#02
         <h2 style="color:#7dd3fc; text-align:center; letter-spacing:2px; font-size:18px;">APT-E PRO</h2>
         
         <div class="proctor-box">
-            <video id="video" autoplay muted></video>
+        <video id="video" autoplay muted></video>
             <div id="vBadge" class="violation-badge">VIOLATIONS: 0/5</div>
         </div>
 
@@ -61,7 +61,7 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#02
 
         <div style="flex-grow:1"></div>
         <button class="action-btn" style="background:#1e293b; margin-bottom:10px;" onclick="location.reload()">🔄 Soft Refresh</button>
-        <button id="loginBtn" class="action-btn" onclick="handleLogin()">Secure Login</button>
+       <button id="loginBtn" class="action-btn" onclick="handleLoginFlow()">Secure Login</button>
     </div>
 
     <div class="main">
@@ -198,6 +198,33 @@ window.calculateDynamicScore = async function(transcript, currentSubject) {
 
     // Score = (Matches / Total Keywords) * 100
     return Math.round((matches / keywords.length) * 100);
+};
+    window.handleLoginFlow = async function() {
+    const email = prompt("Enter Authorized Email:");
+    if (!email) return;
+
+    const password = prompt("Enter Password:");
+    if (!password) return;
+
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Redirect based on role
+        if (user.email === "admin@study.com") {
+            // Show Admin Dashboard
+            document.getElementById("admin-portal").classList.remove("hidden");
+            document.getElementById("student-portal").classList.add("hidden");
+            initAdminDashboard(); [cite: 1]
+        } else {
+            // Show Student Interview Portal
+            document.getElementById("student-portal").classList.remove("hidden");
+            document.getElementById("admin-portal").classList.add("hidden");
+            initStudentDashboard(); [cite: 1]
+        }
+    } catch (error) {
+        alert("Login Failed: " + error.message);
+    }
 };
 // --- INITIALIZE ---
 window.onload = () => {
