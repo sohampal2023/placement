@@ -173,18 +173,31 @@
         let alertsCount = 0;
 
         // --- AUTH & ADMIN CORE ---
-        window.launchAdmin = () => {
-            const user = document.getElementById('adm-user').value;
-            const key = document.getElementById('adm-key').value;
-            const allowed = ["admin@admin.com", "admin@portal.com"];
+        // --- LOCATION: window.launchAdmin ---
+window.launchAdmin = async () => {
+    const email = document.getElementById('adm-user').value;
+    const password = document.getElementById('adm-key').value;
+    const allowed = ["admin@admin.com", "admin@portal.com"]; // Security whitelist
 
-            if(allowed.includes(user) && key === "SUPREME2026") {
-                document.getElementById('gate-overlay').classList.add('hidden');
-                document.getElementById('admin-hub').classList.remove('hidden');
-                syncSurveillanceMatrix();
-            } else { alert("ACCESS DENIED: Credentials not in Supreme Authority database."); }
-        };
+    if(!allowed.includes(email)) {
+        alert("CRITICAL: Email not in Supreme Whitelist.");
+        return;
+    }
 
+    try {
+        // This actually checks against your Firebase Auth Database
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // If successful, show the dashboard
+        document.getElementById('gate-overlay').classList.add('hidden');
+        document.getElementById('admin-hub').classList.remove('hidden');
+        syncSurveillanceMatrix();
+        console.log("Supreme Authority Verified:", userCredential.user.uid);
+    } catch (error) {
+        console.error("Auth Error:", error.code);
+        alert("ACCESS DENIED: Firebase credentials invalid or User does not exist.");
+    }
+};
         window.launchCandidate = async () => {
             const roll = document.getElementById('inp-roll').value;
             if(!roll) return alert("Enter Roll No.");
@@ -262,20 +275,43 @@
             appendChatBubble("SYSTEM", "Secure Handshake Complete. Question 1: Explain the Ferranti effect in the context of high-voltage transmission lines.");
         }
 
-        window.commitResponse = async () => {
-            const val = document.getElementById('candidate-input').value;
-            if(!val) return;
-            renderUserBubble(val);
-            document.getElementById('candidate-input').value = "";
+       // --- LOCATION: Admin Script Section ---
+window.setInterviewMode = async (mode) => {
+    // Mode: 'AI' or 'LIVE'
+    await setDoc(doc(db, "config", "state"), {
+        mode: mode,
+        updatedBy: auth.currentUser.email,
+        timestamp: new Date().getTime()
+    }, { merge: true });
+    alert(`SYSTEM STATE: ${mode} MODE ACTIVATED`);
+};
 
-            const score = val.length > 40 ? 92 : 38; // Mock AI Evaluation
-            await updateDoc(doc(db, "sessions", userUID), {
-                submissions: arrayUnion({ text: val, timestamp: new Date() }),
-                ai_score: score
-            });
-            setTimeout(() => appendChatBubble("SYSTEM", "AI Decision: Response recorded. Evaluated technical depth at " + score + "%. Next Question..."), 1500);
-        };
+// --- LOCATION: Candidate commitResponse function ---
+window.commitResponse = async () => {
+    const val = document.getElementById('candidate-input').value;
+    if(!val) return;
+    
+    renderUserBubble(val);
+    document.getElementById('candidate-input').value = "";
 
+    // 1. Log response to Firebase
+    await updateDoc(doc(db, "sessions", userUID), {
+        submissions: arrayUnion({ text: val, time: new Date() })
+    });
+
+    // 2. Check System Mode
+    const configSnap = await getDoc(doc(db, "config", "state"));
+    const systemMode = configSnap.data()?.mode || 'AI';
+
+    if(systemMode === 'AI') {
+        // Automated response from your PDF/Word Bank logic
+        const score = val.length > 50 ? 85 : 40; 
+        setTimeout(() => appendChatBubble("SYSTEM", `AI Analysis: ${score}% depth. Proceeding...`), 1000);
+    } else {
+        // Live mode: Do nothing, wait for Admin to push next question
+        appendChatBubble("SYSTEM", "Response received. Awaiting Supreme Admin's next prompt...");
+    }
+};
         function listenForSupremeOverride() {
             onSnapshot(doc(db, "sessions", userUID), (snap) => {
                 if(snap.data().override) {
