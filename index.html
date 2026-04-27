@@ -91,24 +91,34 @@
 
         // --- 3. AI PROCTORING ENGINE ---
         async function startProctoring() {
-            const model = await cocoSsd.load();
-            const video = document.getElementById('video');
+    const model = await cocoSsd.load();
+    const video = document.getElementById('video');
+    
+    setInterval(async () => {
+        const predictions = await model.detect(video);
+        let phoneFound = false;
+        let persons = 0;
+        let forbiddenObject = false;
+
+        predictions.forEach(p => {
+            // 1. Check for Phones or Tablets
+            if (p.class === 'cell phone' || p.class === 'laptop') phoneFound = true;
             
-            setInterval(async () => {
-                const predictions = await model.detect(video);
-                let phoneFound = false;
-                let multiFace = 0;
+            // 2. Check for Multiple People
+            if (p.class === 'person') persons++;
 
-                predictions.forEach(p => {
-                    if (p.class === 'cell phone') phoneFound = true;
-                    if (p.class === 'person') multiFace++;
-                });
+            // 3. Check for "Hidden" aids
+            if (p.class === 'book') forbiddenObject = true;
+        });
 
-                if (phoneFound || multiFace > 1) {
-                    handleViolation(phoneFound ? "Mobile Detected" : "Multiple Faces Detected");
-                }
-            }, 3000);
-        }
+        // Trigger Violations
+        if (phoneFound) handleViolation("Electronic Device Detected");
+        if (persons > 1) handleViolation("Multiple People in Frame");
+        if (persons === 0) handleViolation("Candidate Out of Frame");
+        if (forbiddenObject) handleViolation("Unauthorized Materials (Book/Paper)");
+
+    }, 3000); // Scans every 3 seconds
+}
 
         function handleViolation(reason) {
             violations++;
