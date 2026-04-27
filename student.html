@@ -1,23 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Student Portal | AI Mode</title>
+    <meta charset="UTF-8">
+    <title>Student Portal | Exam AI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="test-container">
-        <div id="proctor-status">AI Proctor: <span style="color: green;">Active</span></div>
-        
-        <div class="ai-box">
-            <h2>AI Interview Mode</h2>
-            <button id="askBtn">Step 1: AI Ask Question</button>
-            <button id="recordBtn">Step 2: Voice Answer</button>
-            
-            <div class="transcript-box">
-                <strong>Your Answer:</strong>
-                <p id="transcript">...</p>
-            </div>
+    <div class="proctor-overlay" id="statusBanner">AI PROCTOR ACTIVE</div>
+    
+    <div class="student-container">
+        <div class="sidebar">
+            <h3>My Portal</h3>
+            <p>Upcoming Tests</p>
+            <p>Past Performance</p>
+            <p>Answer Keys</p>
         </div>
+
+        <main class="test-area">
+            <div class="ai-mode">
+                <h2>AI Interview Mode</h2>
+                <div class="bot-icon">🤖</div>
+                <div class="actions">
+                    <button id="askBtn" class="btn-ai">1. AI Speak Question</button>
+                    <button id="recordBtn" class="btn-voice">2. Voice My Answer</button>
+                </div>
+                <div class="transcript">
+                    <strong>Transcript:</strong>
+                    <p id="transcriptOutput">Waiting for answer...</p>
+                </div>
+            </div>
+        </main>
     </div>
     <script type="module" src="app.js"></script>
 </body>
