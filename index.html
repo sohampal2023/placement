@@ -1,46 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>APT-E System | Pro Placement Portal</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <meta charset="UTF-8">
+    <title>APT-E System | Pro Placement Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
-<style>
-/* --- APT-E CYBERPUNK THEME (Based on Focus Watchdog) --- */
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#020617; color:#e5e7eb}
-.app{display:grid;grid-template-columns:300px 1fr;height:100vh}
+    <style>
+        /* --- APT-E CYBERPUNK THEME --- */
+        *{box-sizing:border-box}
+        html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#020617; color:#e5e7eb}
+        .app{display:grid;grid-template-columns:300px 1fr;height:100vh}
 
-/* SIDEBAR & PROCTORING */
-.sidebar{padding:20px; border-right:1px solid #1e293b; display:flex; flex-direction:column; background:#0f172a;}
-.proctor-box { width:100%; height:180px; background:#000; border-radius:12px; border:2px solid #1e293b; margin-bottom:15px; overflow:hidden; position:relative; }
-#video { width:100%; height:100%; object-fit:cover; }
-.violation-badge { position:absolute; top:5px; right:5px; background:#7f1d1d; color:#fca5a5; padding:2px 8px; font-size:10px; font-weight:800; border-radius:4px; }
+        .sidebar{padding:20px; border-right:1px solid #1e293b; display:flex; flex-direction:column; background:#0f172a;}
+        .proctor-box { width:100%; height:180px; background:#000; border-radius:12px; border:2px solid #1e293b; margin-bottom:15px; overflow:hidden; position:relative; }
+        #video { width:100%; height:100%; object-fit:cover; }
+        .violation-badge { position:absolute; top:5px; right:5px; background:#7f1d1d; color:#fca5a5; padding:2px 8px; font-size:10px; font-weight:800; border-radius:4px; }
 
-/* CHAT INTERFACE */
-.main{padding:24px; display:flex; flex-direction:column; gap:20px;}
-.interview-container { flex-grow:1; background:#020617; border:1px solid #334155; border-radius:20px; display:flex; flex-direction:column; overflow:hidden; }
-.chat-window { flex-grow:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
-.bubble { max-width:80%; padding:12px 18px; border-radius:18px; font-size:14px; line-height:1.5; }
-.ai-bubble { background:#1e293b; color:#7dd3fc; align-self:flex-start; border-bottom-left-radius:2px; border:1px solid #38bdf844; }
-.user-bubble { background:#1e40af; color:#fff; align-self:flex-end; border-bottom-right-radius:2px; }
+        .main{padding:24px; display:flex; flex-direction:column; gap:20px;}
+        .interview-container { flex-grow:1; background:#020617; border:1px solid #334155; border-radius:20px; display:flex; flex-direction:column; overflow:hidden; }
+        .chat-window { flex-grow:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
+        .bubble { max-width:80%; padding:12px 18px; border-radius:18px; font-size:14px; line-height:1.5; margin-bottom: 10px; }
+        .ai-bubble { background:#1e293b; color:#7dd3fc; align-self:flex-start; border-bottom-left-radius:2px; border:1px solid #38bdf844; }
+        .user-bubble { background:#1e40af; color:#fff; align-self:flex-end; border-bottom-right-radius:2px; }
 
-/* SPEEDOMETER (Interview Rating) */
-.speedo-container { background:#0f172a; padding:20px; border-radius:20px; border:1px solid #334155; text-align:center; }
-.speedo{ width:200px;height:100px;border-radius:200px 200px 0 0; background:conic-gradient(from -90deg, #ef4444, #facc15, #22c55e); position:relative; margin: 0 auto; }
-.needle{ position:absolute;width:3px;height:80px; background:#fff; left:50%; bottom:0; transform-origin:bottom center; transition:.6s cubic-bezier(.15,.85,.2,1) }
+        .speedo-container { background:#0f172a; padding:20px; border-radius:20px; border:1px solid #334155; text-align:center; }
+        .speedo{ width:200px;height:100px;border-radius:200px 200px 0 0; background:conic-gradient(from -90deg, #ef4444, #facc15, #22c55e); position:relative; margin: 0 auto; }
+        .needle{ position:absolute;width:3px;height:80px; background:#fff; left:50%; bottom:0; transform-origin:bottom center; transition:.6s cubic-bezier(.15,.85,.2,1) }
 
-/* BUTTONS */
-.action-btn { width:100%; padding:15px; background:#0ea5e9; border:none; border-radius:12px; color:#fff; font-weight:800; cursor:pointer; text-transform:uppercase; transition:0.2s; }
-.action-btn:active { transform:scale(0.98); }
-.action-btn.recording { background:#ef4444; animation: pulse 1.5s infinite; }
+        .action-btn { width:100%; padding:15px; background:#0ea5e9; border:none; border-radius:12px; color:#fff; font-weight:800; cursor:pointer; text-transform:uppercase; transition:0.2s; }
+        .action-btn:hover { background: #0284c7; }
+        .action-btn.recording { background:#ef4444; animation: pulse 1.5s infinite; }
 
-@keyframes pulse { 0% { opacity:1; } 50% { opacity:0.7; } 100% { opacity:1; } }
-.hidden { display:none !important; }
-</style>
+        @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.7; } 100% { opacity:1; } }
+        .hidden { display:none !important; }
+    </style>
 </head>
 <body>
 
@@ -49,7 +47,7 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#02
         <h2 style="color:#7dd3fc; text-align:center; letter-spacing:2px; font-size:18px;">APT-E PRO</h2>
         
         <div class="proctor-box">
-        <video id="video" autoplay muted></video>
+            <video id="video" autoplay muted></video>
             <div id="vBadge" class="violation-badge">VIOLATIONS: 0/5</div>
         </div>
 
@@ -61,27 +59,33 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#02
 
         <div style="flex-grow:1"></div>
         <button class="action-btn" style="background:#1e293b; margin-bottom:10px;" onclick="location.reload()">🔄 Soft Refresh</button>
-       <button id="loginBtn" class="action-btn" onclick="handleLoginFlow()">Secure Login</button>
+        <button id="loginBtn" class="action-btn" onclick="handleLoginFlow()">Secure Login</button>
     </div>
 
     <div class="main">
-        <div class="interview-container">
+        <div id="student-portal" class="interview-container">
             <div id="chatWindow" class="chat-window">
                 <div class="bubble ai-bubble">
-                    <strong>SYSTEM AI:</strong> Welcome candidate. Please click "Start Answering" and state your name to begin the technical evaluation.
+                    <strong>SYSTEM AI:</strong> Welcome candidate. Please click "Start Answering" to begin your technical evaluation.
                 </div>
             </div>
             
             <div style="padding:20px; background:#0f172a; border-top:1px solid #334155;">
-                <div id="sttPreview" style="font-size:12px; color:#64748b; font-style:italic; margin-bottom:10px;">Waiting for voice input...</div>
+                <div id="sttPreview" style="font-size:12px; color:#38bdf8; font-style:italic; margin-bottom:10px;">Waiting for voice input...</div>
                 <button id="micBtn" class="action-btn" onclick="toggleMic()">🎤 Start Answering</button>
             </div>
+        </div>
+
+        <div id="admin-portal" class="hidden speedo-container" style="text-align:left;">
+            <h3 style="color:#a855f7">ADMIN COMMAND CENTER</h3>
+            <p style="font-size:12px; color:#94a3b8">Manage Subject Keywords & Monitor Live Feed</p>
+            <button class="action-btn" style="background:#450a0a; margin-top:10px;" onclick="resetViolations()">Reset Student Violations</button>
         </div>
 
         <div id="uploadBox" class="speedo-container" style="text-align:left">
             <h4 style="margin:0 0 10px 0; color:#38bdf8">SUBMIT RECRUITMENT DOCS</h4>
             <input type="file" id="fileInp" style="font-size:12px;">
-            <button onclick="uploadDoc()" style="background:#334155; padding:5px 10px; border:none; border-radius:4px; color:#fff; cursor:pointer;">Upload PDF/DOCX</button>
+            <button onclick="uploadDoc()" style="background:#334155; padding:5px 10px; border:none; border-radius:4px; color:#fff; cursor:pointer; margin-top:10px;">Upload PDF/DOCX</button>
         </div>
     </div>
 </div>
@@ -95,25 +99,82 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',sans-serif; background:#02
 <script>
 // --- CONFIGURATION ---
 const firebaseConfig = {
-  apiKey: "AIzaSyD16NhAUgo3sgag01nZPZGHXjMvAZZ0rDE",
-  databaseURL: "https://focus-dashboard-5965a-default-rtdb.firebaseio.com",
-  projectId: "focus-dashboard-5965a",
-  storageBucket: "focus-dashboard-5965a.appspot.com",
+    apiKey: "AIzaSyD16NhAUgo3sgag01nZPZGHXjMvAZZ0rDE",
+    databaseURL: "https://focus-dashboard-5965a-default-rtdb.firebaseio.com",
+    projectId: "focus-dashboard-5965a",
+    storageBucket: "focus-dashboard-5965a.appspot.com",
 };
 
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
+
 let violations = 0;
 let isRecording = false;
 let studentId = "soham_pal";
+let currentSubject = "iot"; 
 
-// --- AI MARKING ENGINE (From Your IoT PDF) ---
-const answerKey = {
-    "iot": ["sensors", "interconnected", "network", "data", "internet"],
-    "m2m": ["machine", "point-to-point", "closed", "wired"],
-    "cryptography": ["encryption", "decryption", "keys", "security"]
+// --- VOICE RECOGNITION (Internshala Style) ---
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognizer = new SpeechRec();
+recognizer.continuous = true;
+recognizer.interimResults = true;
+
+window.toggleMic = function() {
+    const btn = document.getElementById('micBtn');
+    const preview = document.getElementById('sttPreview');
+
+    if (!isRecording) {
+        recognizer.start();
+        isRecording = true;
+        btn.innerText = "⏹ Stop & Submit";
+        btn.classList.add('recording');
+    } else {
+        recognizer.stop();
+        isRecording = false;
+        btn.innerText = "🎤 Start Answering";
+        btn.classList.remove('recording');
+        
+        const text = preview.innerText;
+        if (text && text !== "Waiting for voice input...") {
+            renderChatBubble("You", text, "user-bubble");
+            calculateMarks(text);
+        }
+    }
 };
+
+recognizer.onresult = (event) => {
+    const transcript = Array.from(event.results).map(r => r[0].transcript).join('');
+    document.getElementById('sttPreview').innerText = transcript;
+};
+
+function renderChatBubble(sender, text, type) {
+    const chat = document.getElementById('chatWindow');
+    chat.innerHTML += `<div class="bubble ${type}"><strong>${sender}:</strong> ${text}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// --- DYNAMIC MARKING ENGINE ---
+async function calculateMarks(text) {
+    // Reference keywords from your IoT content
+    const keywords = ["sensors", "interconnected", "network", "data", "internet", "monitoring", "scalability"];
+    let matches = 0;
+    const words = text.toLowerCase();
+
+    keywords.forEach(kw => { if(words.includes(kw)) matches++; });
+
+    const score = Math.round((matches / keywords.length) * 100);
+    updateSpeedo(score);
+    
+    // Sync to Firebase for Admin to see Live
+    db.ref(`interviews/${studentId}/last_answer`).set({ text, score, time: Date.now() });
+}
+
+function updateSpeedo(percent) {
+    const rotation = (percent / 100) * 180 - 90;
+    document.getElementById('needle').style.transform = `rotate(${rotation}deg)`;
+    document.getElementById('scoreLabel').innerText = percent + "%";
+}
 
 // --- PROCTORING LOGIC ---
 async function startProctoring() {
@@ -128,117 +189,51 @@ async function startProctoring() {
         if (phoneFound || persons > 1 || persons === 0) {
             violations++;
             document.getElementById('vBadge').innerText = `VIOLATIONS: ${violations}/5`;
-            if (violations >= 5) terminateExam();
+            db.ref(`interviews/${studentId}/violations`).set(violations);
+            if (violations >= 5) document.getElementById('lockScreen').classList.remove('hidden');
         }
     }, 3000);
 }
 
-function terminateExam() {
-    document.getElementById('lockScreen').classList.remove('hidden');
-}
-
-// --- VOICE & CHAT LOGIC ---
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recognition.continuous = true;
-recognition.interimResults = true;
-
-function toggleMic() {
-    const btn = document.getElementById('micBtn');
-    if (!isRecording) {
-        recognition.start();
-        btn.innerText = "⏹ Stop & Submit";
-        btn.classList.add('recording');
-    } else {
-        recognition.stop();
-        btn.innerText = "🎤 Start Answering";
-        btn.classList.remove('recording');
-        processResponse(document.getElementById('sttPreview').innerText);
-    }
-    isRecording = !isRecording;
-}
-
-recognition.onresult = (event) => {
-    const text = Array.from(event.results).map(r => r[0].transcript).join('');
-    document.getElementById('sttPreview').innerText = text;
-};
-
-function processResponse(text) {
-    const chat = document.getElementById('chatWindow');
-    chat.innerHTML += `<div class="bubble user-bubble">${text}</div>`;
-    chat.scrollTop = chat.scrollHeight;
-
-    // Automated Marking Logic
-    let score = 0;
-    const words = text.toLowerCase();
-    answerKey["iot"].forEach(kw => { if(words.includes(kw)) score += 20; });
-    
-    updateSpeedo(score);
-    db.ref(`interviews/${studentId}/last_answer`).set({ text, score, time: Date.now() });
-}
-
-function updateSpeedo(percent) {
-    const rotation = (percent / 100) * 180 - 90;
-    document.getElementById('needle').style.transform = `rotate(${rotation}deg)`;
-    document.getElementById('scoreLabel').innerText = percent + "%";
-}
-// Marking Logic for Any Subject
-window.calculateDynamicScore = async function(transcript, currentSubject) {
-    const snap = await get(ref(db, `settings/subjects/${currentSubject}/keywords`));
-    if (!snap.exists()) return 0;
-
-    const keywords = snap.val(); // List of keywords from your uploaded PDF
-    const studentText = transcript.toLowerCase();
-    let matches = 0;
-
-    keywords.forEach(word => {
-        if (studentText.includes(word.toLowerCase())) {
-            matches++;
-        }
-    });
-
-    // Score = (Matches / Total Keywords) * 100
-    return Math.round((matches / keywords.length) * 100);
-};
-    window.handleLoginFlow = async function() {
+// --- AUTH & PORTAL SEPARATION ---
+window.handleLoginFlow = async function() {
     const email = prompt("Enter Authorized Email:");
-    if (!email) return;
-
     const password = prompt("Enter Password:");
-    if (!password) return;
 
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Redirect based on role
         if (user.email === "admin@study.com") {
-            // Show Admin Dashboard
             document.getElementById("admin-portal").classList.remove("hidden");
-            document.getElementById("student-portal").classList.add("hidden");
-            initAdminDashboard(); [cite: 1]
+            alert("Admin Access Granted.");
         } else {
-            // Show Student Interview Portal
-            document.getElementById("student-portal").classList.remove("hidden");
-            document.getElementById("admin-portal").classList.add("hidden");
-            initStudentDashboard(); [cite: 1]
+            alert("Student Session Restored.");
         }
     } catch (error) {
         alert("Login Failed: " + error.message);
     }
 };
-// --- INITIALIZE ---
+
+window.resetViolations = function() {
+    violations = 0;
+    document.getElementById('vBadge').innerText = "VIOLATIONS: 0/5";
+    document.getElementById('lockScreen').classList.add('hidden');
+    db.ref(`interviews/${studentId}/violations`).set(0);
+};
+
+// --- INITIALIZE WEBCAM ---
 window.onload = () => {
     navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
         document.getElementById('video').srcObject = s;
         startProctoring();
-    });
+    }).catch(err => alert("Camera access required for proctoring."));
     
-    // Admin Live Question Listener
+    // Listen for Admin Live Questions
     db.ref(`interviews/${studentId}/live_qn`).on('value', (snap) => {
         const qn = snap.val();
         if(qn) {
-            const chat = document.getElementById('chatWindow');
-            chat.innerHTML += `<div class="bubble ai-bubble"><strong>INTERVIEWER:</strong> ${qn}</div>`;
+            renderChatBubble("Interviewer", qn, "ai-bubble");
             const msg = new SpeechSynthesisUtterance(qn);
             window.speechSynthesis.speak(msg);
         }
