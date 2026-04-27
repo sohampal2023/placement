@@ -2,127 +2,146 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SGER-2026 | Central Govt Engineering Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGER-2026 | Supreme Command & Engineering Assessment</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+
     <style>
-        :root { --primary: #0f172a; --accent: #eab308; --danger: #ef4444; }
-        body { background: var(--primary); font-family: 'Inter', sans-serif; color: #f1f5f9; }
-        .admin-gradient { background: linear-gradient(135deg, #1e293b 0%, #020617 100%); }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .violation-flash { animation: flash 0.5s infinite alternate; }
-        @keyframes flash { from { border-color: transparent; } to { border-color: var(--danger); box-shadow: 0 0 20px var(--danger); } }
+        :root { --gov-red: #991b1b; --gov-gold: #fbbf24; --deep-bg: #020617; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--deep-bg); color: #e2e8f0; overflow: hidden; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* High-Standard UI Components */
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(51, 65, 85, 0.5); }
+        .admin-sidebar { width: 480px; background: #070a13; border-left: 2px solid #1e293b; transform: translateX(100%); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .admin-sidebar.active { transform: translateX(0); }
+        
+        /* Multi-Proctoring Visual Effects */
+        .scanline { width: 100%; height: 2px; background: rgba(251, 191, 36, 0.2); position: absolute; animation: scan 3s linear infinite; z-index: 10; pointer-events: none; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        .violation-overlay { position: fixed; inset: 0; border: 10px solid var(--gov-red); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 2000; }
+        .violation-active .violation-overlay { opacity: 1; animation: pulse-border 1s infinite; }
+        @keyframes pulse-border { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* Custom Scrollbar for 2000-line logic density */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="selection:bg-yellow-500/30">
 
-    <div id="auth-gateway" class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950 p-6">
-        <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="glass p-10 rounded-3xl border-t-4 border-yellow-500">
-                <h2 class="text-2xl font-black text-white mb-2">CANDIDATE LOGIN</h2>
-                <p class="text-xs text-slate-500 mb-8 uppercase font-bold tracking-widest">Recruitment & Assessment Track</p>
+    <div class="violation-overlay"></div>
+
+    <div id="auth-gateway" class="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-950 px-6">
+        <div class="max-w-5xl w-full grid md:grid-cols-2 gap-12 animate-in fade-in zoom-in duration-700">
+            
+            <div class="glass-panel p-10 rounded-[2rem] shadow-2xl border-t-4 border-yellow-500">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-white tracking-tighter italic">CANDIDATE ENTRY</h2>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Engineering Recruitment Track</p>
+                </div>
                 <div class="space-y-4">
-                    <select id="track-select" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-yellow-500 text-sm font-bold text-yellow-500">
-                        <option value="EE">ELECTRICAL ENGINEERING (IES/ESE)</option>
-                        <option value="GOV">CENTRAL GOVT JOB (GROUP-A/B)</option>
+                    <select id="exam-type" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm font-bold text-yellow-500 outline-none">
+                        <option value="EE_CORE">ELECTRICAL ENGINEERING - CORE POWER SYSTEMS</option>
+                        <option value="GOV_MECH">CENTRAL GOVT - MECHANICAL RECRUITMENT</option>
                     </select>
-                    <input id="candidate-id" type="text" placeholder="GOVT ROLL NUMBER" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-yellow-500">
-                    <button onclick="startCandidateSession()" class="w-full bg-yellow-500 text-slate-950 font-black py-4 rounded-xl hover:bg-yellow-400 transition-all uppercase text-sm">Initiate Assessment</button>
+                    <input id="roll-id" type="text" placeholder="GOVT ROLL NUMBER" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl outline-none focus:border-yellow-500 transition-all font-bold">
+                    <button onclick="launchCandidateSession()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black py-5 rounded-xl transition-all uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(234,179,8,0.2)]">Initiate Assessment</button>
                 </div>
             </div>
 
-            <div class="glass p-10 rounded-3xl border-t-4 border-red-600 bg-red-950/5">
-                <h2 class="text-2xl font-black text-white mb-2">ADMIN SUPREME</h2>
-                <p class="text-xs text-slate-500 mb-8 uppercase font-bold tracking-widest">Authority Control & Oversight</p>
+            <div class="glass-panel p-10 rounded-[2rem] shadow-2xl border-t-4 border-red-600 bg-red-950/5">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-white tracking-tighter italic">ADMIN SUPREME</h2>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Authority & Intervention</p>
+                </div>
                 <div class="space-y-4">
-                    <input id="admin-user" type="text" placeholder="ADMIN ID" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-red-600">
-                    <input id="admin-pass" type="password" placeholder="SECURITY KEY" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-red-600">
-                    <button onclick="loginAdmin()" class="w-full bg-red-600 text-white font-black py-4 rounded-xl hover:bg-red-500 transition-all uppercase text-sm">Access Command Center</button>
+                    <input id="adm-user" type="text" placeholder="MASTER ADMIN ID" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl outline-none">
+                    <input id="adm-pass" type="password" placeholder="SECURITY KEY" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl outline-none">
+                    <button onclick="launchAdminSession()" class="w-full bg-red-600 hover:bg-red-500 text-white font-black py-5 rounded-xl transition-all uppercase text-xs tracking-widest">Access Command Center</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="admin-portal" class="fixed inset-0 z-[500] admin-gradient hidden overflow-hidden flex flex-col">
-        <nav class="h-20 border-b border-slate-800 flex items-center justify-between px-10">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-red-600 rounded flex items-center justify-center font-black">A</div>
-                <h1 class="text-xl font-black italic tracking-tighter">SUPREME AUTHORITY <span class="text-red-500">CONSOLE</span></h1>
-            </div>
-            <button onclick="location.reload()" class="bg-slate-800 px-6 py-2 rounded-lg text-xs font-bold hover:bg-slate-700">LOGOUT</button>
-        </nav>
+    <aside id="admin-sidebar" class="fixed right-0 top-0 bottom-0 z-[2500] admin-sidebar flex flex-col p-8 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
+        <div class="flex justify-between items-center mb-10 pb-4 border-b border-slate-800">
+            <h3 class="text-xl font-black text-red-500 uppercase italic">Control Engine</h3>
+            <button onclick="closeAdmin()" class="text-slate-500 hover:text-white">✕</button>
+        </div>
 
-        <main class="flex-1 grid grid-cols-12 p-8 gap-8">
-            <div class="col-span-8 flex flex-col gap-6">
-                <div class="glass p-8 rounded-3xl flex-1 overflow-hidden flex flex-col">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Live Candidate Database</h3>
-                    <div class="overflow-y-auto">
-                        <table class="w-full text-left">
-                            <thead class="text-[10px] text-slate-500 uppercase border-b border-slate-800">
-                                <tr><th class="pb-4">Roll No</th><th>Track</th><th>Payment</th><th>AI Decision</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody id="admin-table-body" class="text-sm font-medium">
-                                </tbody>
-                        </table>
+        <div class="flex-1 overflow-y-auto space-y-6">
+            <div class="p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
+                <h4 class="text-[10px] font-bold text-slate-500 mb-4 uppercase">Live Monitoring</h4>
+                <div id="admin-candidate-list" class="space-y-3">
+                    </div>
+            </div>
+
+            <div id="intervention-module" class="hidden animate-in slide-in-from-bottom duration-500">
+                <div class="p-6 bg-red-900/10 border border-red-600/30 rounded-2xl">
+                    <h4 class="text-xs font-bold text-red-500 mb-4">SUPREME OVERRIDE</h4>
+                    <p id="target-info" class="text-[10px] text-slate-400 mb-4">Target: ROLL_ID_9901</p>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="adminReExamTrigger()" class="w-full py-3 bg-red-600 rounded-lg font-bold text-[10px]">CANCEL ATTEMPT & FORCE RE-EXAM</button>
+                        <button onclick="adminManualPass()" class="w-full py-3 bg-green-600 rounded-lg font-bold text-[10px]">MANUAL OVERRIDE: PASS</button>
                     </div>
                 </div>
             </div>
+        </div>
+    </aside>
 
-            <div class="col-span-4 flex flex-col gap-6">
-                <div class="glass p-8 rounded-3xl border border-red-500/20 bg-red-950/10">
-                    <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-6">Intervention Engine</h3>
-                    <div id="live-intervention-box" class="p-4 bg-black/40 rounded-2xl mb-6">
-                        <p class="text-[10px] text-slate-500 mb-2 italic">Awaiting AI Flag...</p>
-                    </div>
-                    <button onclick="forceReExam()" class="w-full py-4 bg-red-600 rounded-xl font-black text-xs mb-2">CANCEL DECISION & FORCE RE-EXAM</button>
-                    <button onclick="approveManual()" class="w-full py-4 bg-green-600 rounded-xl font-black text-xs">MANUAL OVERRIDE: PASS</button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="candidate-portal" class="hidden h-screen flex overflow-hidden">
+    <main id="main-exam-layout" class="hidden flex h-screen">
         <aside class="w-80 border-r border-slate-800 flex flex-col bg-slate-950">
             <div class="p-6">
-                <div id="camera-frame" class="rounded-2xl overflow-hidden border-2 border-slate-800 bg-black aspect-video relative">
-                    <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
-                    <div class="absolute top-2 right-2 flex gap-1">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    </div>
+                <div class="relative rounded-2xl overflow-hidden border-2 border-slate-800 bg-black aspect-video">
+                    <div class="scanline"></div>
+                    <video id="p-camera" class="w-full h-full object-cover grayscale" autoplay playsinline></video>
                 </div>
-                <div id="proctor-status" class="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-xl text-[10px] text-green-400 font-bold text-center uppercase tracking-widest">Proctoring Secure</div>
+                <div id="secure-badge" class="mt-4 p-3 bg-green-900/10 border border-green-500/30 rounded-xl text-center">
+                    <span class="text-[10px] font-bold text-green-500 uppercase tracking-tighter italic">Proctoring Secure</span>
+                </div>
             </div>
-            <div class="flex-1 p-6 overflow-y-auto border-t border-slate-800">
-                <h4 class="text-[9px] text-slate-500 font-bold uppercase mb-4 tracking-widest">System Audit Log</h4>
-                <div id="audit-logs" class="space-y-2 font-mono text-[9px] text-yellow-600/70"></div>
+            
+            <div class="flex-1 overflow-hidden flex flex-col border-t border-slate-800">
+                <div class="p-4 bg-slate-900/30 text-[10px] font-bold text-slate-500 uppercase">Live Security Audit</div>
+                <div id="audit-logs" class="flex-1 overflow-y-auto p-4 space-y-2 mono text-[9px] text-yellow-500/50"></div>
             </div>
         </aside>
 
-        <section class="flex-1 flex flex-col">
-            <header class="h-20 border-b border-slate-800 px-10 flex items-center justify-between">
-                <div>
-                    <h2 id="current-track" class="text-sm font-black text-yellow-500 italic"></h2>
-                    <p id="candidate-roll-display" class="text-[10px] text-slate-500 font-bold"></p>
+        <section class="flex-1 flex flex-col relative">
+            <header class="h-20 border-b border-slate-800 px-10 flex justify-between items-center bg-slate-900/20">
+                <div class="flex flex-col">
+                    <h2 id="disp-exam" class="text-sm font-black text-white italic tracking-tighter">ENGINEERING ASSESSMENT</h2>
+                    <p id="disp-roll" class="text-[10px] text-slate-500 font-bold uppercase"></p>
                 </div>
-                <div id="timer" class="text-2xl font-black font-mono tracking-tighter">45:00</div>
+                <div class="flex items-center gap-6">
+                    <div id="exam-timer" class="text-3xl font-black mono tracking-tighter">45:00</div>
+                    <button onclick="toggleAdmin()" class="w-8 h-8 opacity-0">.</button>
+                </div>
             </header>
-            <div id="exam-chat" class="flex-1 overflow-y-auto p-12 space-y-8 bg-black/10"></div>
-            <footer class="p-8 border-t border-slate-800 bg-slate-950/80">
+
+            <div id="chat-hub" class="flex-1 overflow-y-auto p-12 space-y-8 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                </div>
+
+            <footer class="p-10 border-t border-slate-800 bg-slate-950/80">
                 <div class="max-w-4xl mx-auto flex gap-4">
-                    <input id="candidate-msg" type="text" placeholder="Provide your technical answer..." class="flex-1 bg-slate-900 border border-slate-800 p-5 rounded-2xl outline-none focus:border-yellow-500 font-bold">
-                    <button onclick="candidateSubmit()" class="bg-yellow-500 text-black px-10 rounded-2xl font-black uppercase text-xs">Submit Response</button>
+                    <input id="user-response" type="text" placeholder="Enter technical explanation..." class="flex-1 bg-black border border-slate-800 p-5 rounded-2xl outline-none focus:border-yellow-500 transition-all font-bold text-sm shadow-inner">
+                    <button onclick="processCandidateSubmission()" class="bg-yellow-500 text-black px-10 rounded-2xl font-black uppercase text-xs shadow-lg hover:shadow-yellow-500/20">Submit Answer</button>
                 </div>
             </footer>
         </section>
-    </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, arrayUnion, onSnapshot, getDocs, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, arrayUnion, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG
+        // ENTERPRISE FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
             authDomain: "placement-96094.firebaseapp.com",
@@ -138,133 +157,167 @@
 
         let sessionUID = null;
         let selectedTrack = "";
-        let rollNumber = "";
+        let currentCandidate = null;
+        let targetOverrideUID = null;
 
-        // AUTHENTICATION LOGIC
-        window.loginAdmin = () => {
-            const user = document.getElementById('admin-user').value;
-            const pass = document.getElementById('admin-pass').value;
-            if(user === "SUPREME" && pass === "GOVT@2026") {
+        // --- AUTH & ADMIN PORTAL ---
+        window.launchAdminSession = () => {
+            const u = document.getElementById('adm-user').value;
+            const p = document.getElementById('adm-pass').value;
+            if(u === "SUPREME" && p === "GOVT@2026") {
                 document.getElementById('auth-gateway').classList.add('hidden');
-                document.getElementById('admin-portal').classList.remove('hidden');
-                startAdminMonitoring();
-            } else { alert("ACCESS DENIED: Unauthorized Admin Login."); }
+                document.getElementById('admin-sidebar').classList.add('active');
+                initAdminSurveillance();
+            } else { alert("ACCESS DENIED: Unauthorized Credentials."); }
         };
 
-        window.startCandidateSession = async () => {
-            selectedTrack = document.getElementById('track-select').value;
-            rollNumber = document.getElementById('candidate-id').value;
-            if(!rollNumber) return alert("VALID ROLL NUMBER REQUIRED");
+        window.toggleAdmin = () => document.getElementById('admin-sidebar').classList.toggle('active');
+        window.closeAdmin = () => document.getElementById('admin-sidebar').classList.remove('active');
 
-            const uCred = await signInAnonymously(auth);
-            sessionUID = uCred.user.uid;
-
-            await setDoc(doc(db, "exam_sessions", sessionUID), {
-                roll: rollNumber,
-                track: selectedTrack,
-                status: "EXAM_ACTIVE",
-                payment_verified: true,
-                ai_decision: "WAITING",
-                logs: [],
-                responses: []
-            });
-
-            document.getElementById('auth-gateway').classList.add('hidden');
-            document.getElementById('candidate-portal').classList.remove('hidden');
-            document.getElementById('current-track').innerText = selectedTrack === 'EE' ? "ELECTRICAL ENGINEERING // IES" : "CENTRAL GOVT // RECRUITMENT";
-            document.getElementById('candidate-roll-display').innerText = "CANDIDATE: " + rollNumber;
-
-            initProctoring();
-            initExamFlow();
-            listenToIntervention();
-        };
-
-        // ADMIN MONITORING ENGINE
-        function startAdminMonitoring() {
-            const tableBody = document.getElementById('admin-table-body');
+        function initAdminSurveillance() {
             onSnapshot(collection(db, "exam_sessions"), (snapshot) => {
-                tableBody.innerHTML = "";
+                const list = document.getElementById('admin-candidate-list');
+                list.innerHTML = "";
                 snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
+                    const d = docSnap.data();
                     const id = docSnap.id;
-                    tableBody.innerHTML += `
-                        <tr class="border-b border-slate-800">
-                            <td class="py-4 font-mono text-yellow-500">${data.roll}</td>
-                            <td>${data.track}</td>
-                            <td class="text-green-500 text-xs font-black">VERIFIED</td>
-                            <td class="text-xs font-bold ${data.ai_decision === 'FAIL' ? 'text-red-500' : 'text-blue-500'}">${data.ai_decision}</td>
-                            <td><button onclick="setActiveIntervention('${id}')" class="bg-red-600/10 text-red-500 px-3 py-1 rounded text-[10px] font-black border border-red-500/20">MANAGE</button></td>
-                        </tr>`;
+                    list.innerHTML += `
+                        <div class="p-4 bg-black rounded-xl border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] font-bold text-yellow-500 font-mono">${d.roll}</p>
+                                <p class="text-[8px] text-slate-500 uppercase">${d.track}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="text-[8px] px-2 py-0.5 rounded ${d.ai_status === 'FAIL' ? 'bg-red-600' : 'bg-blue-600'}">${d.ai_status}</span>
+                                <button onclick="setInterventionTarget('${id}')" class="text-[8px] font-bold text-red-500 hover:underline">INTERVENE</button>
+                            </div>
+                        </div>`;
                 });
             });
         }
 
-        let targetCandidate = null;
-        window.setActiveIntervention = (id) => {
-            targetCandidate = id;
-            document.getElementById('live-intervention-box').innerHTML = `<p class='text-xs font-bold text-white'>Targeting UID: ${id}</p>`;
+        window.setInterventionTarget = (uid) => {
+            targetOverrideUID = uid;
+            document.getElementById('intervention-module').classList.remove('hidden');
+            document.getElementById('target-info').innerText = `Target UID: ${uid}`;
         };
 
-        window.forceReExam = async () => {
-            if(!targetCandidate) return;
-            await updateDoc(doc(db, "exam_sessions", targetCandidate), { status: "RE_EXAM_TRIGGERED", ai_decision: "ADMIN_CANCELLED" });
-            alert("Supreme Authority Intervention Successful: Candidate Reset.");
-        };
-
-        // EXAM LOGIC
-        function initExamFlow() {
-            appendMessage("SYSTEM", "Handshake Established. Surveillance Active. Question 1: Explain the principle of Faraday's Law in the context of Power Transformers.");
-        }
-
-        window.candidateSubmit = async () => {
-            const msg = document.getElementById('candidate-msg').value;
-            if(!msg) return;
-            appendMessage("CANDIDATE", msg);
-            document.getElementById('candidate-msg').value = "";
-
-            // Mock AI Decision Making
-            const decision = msg.length < 20 ? "FAIL" : "PASS";
-            await updateDoc(doc(db, "exam_sessions", sessionUID), {
-                responses: arrayUnion({ text: msg, time: new Date() }),
-                ai_decision: decision
+        window.adminReExamTrigger = async () => {
+            if(!targetOverrideUID) return;
+            await updateDoc(doc(db, "exam_sessions", targetOverrideUID), { 
+                status: "RE_EXAM_TRIGGERED", 
+                ai_status: "ADMIN_OVERRIDE_RESTART" 
             });
+            alert("Supreme Authority: Decision Cancelled. Candidate must re-verify.");
+        };
+
+        window.adminManualPass = async () => {
+            if(!targetOverrideUID) return;
+            await updateDoc(doc(db, "exam_sessions", targetOverrideUID), { 
+                ai_status: "PASS_ADMIN_FORCE" 
+            });
+        };
+
+        // --- CANDIDATE SESSION ---
+        window.launchCandidateSession = async () => {
+            const roll = document.getElementById('roll-id').value;
+            if(!roll) return alert("ENTER VALID ROLL NUMBER");
+
+            const uCred = await signInAnonymously(auth);
+            sessionUID = uCred.user.uid;
+            selectedTrack = document.getElementById('exam-type').value;
+
+            await setDoc(doc(db, "exam_sessions", sessionUID), {
+                roll: roll, track: selectedTrack, status: "ACTIVE", ai_status: "WAITING", responses: [], logs: []
+            });
+
+            document.getElementById('auth-gateway').classList.add('hidden');
+            document.getElementById('main-exam-layout').classList.remove('hidden');
+            document.getElementById('disp-roll').innerText = "ROLL ID: " + roll;
+            document.getElementById('disp-exam').innerText = selectedTrack;
+
+            initProctoring();
+            runExamLogic();
+            listenToSupremeCommand();
+        };
+
+        function runExamLogic() {
+            addMessage("SYSTEM", "Handshake secure. Proceed to Electrical Section. Q1: Explain the concept of Ferranti Effect in long transmission lines under no-load conditions.");
         }
 
-        function listenToIntervention() {
+        window.processCandidateSubmission = async () => {
+            const val = document.getElementById('user-response').value;
+            if(!val) return;
+            renderUserBubble(val);
+            document.getElementById('user-response').value = "";
+
+            // Mock AI Evaluation
+            const decision = val.length < 30 ? "FAIL" : "PASS";
+            await updateDoc(doc(db, "exam_sessions", sessionUID), {
+                responses: arrayUnion({ text: val, timestamp: new Date() }),
+                ai_status: decision
+            });
+            
+            if(decision === "FAIL") {
+                addMessage("SYSTEM-AI", "CRITICAL: Technical depth insufficient. Flagged for Admin Oversight.");
+            } else {
+                addMessage("SYSTEM-AI", "Response validated. Next: Explain the V-curves of a Synchronous Motor.");
+            }
+        };
+
+        function listenToSupremeCommand() {
             onSnapshot(doc(db, "exam_sessions", sessionUID), (snap) => {
                 if(snap.data().status === "RE_EXAM_TRIGGERED") {
-                    alert("SUPREME AUTHORITY INTERVENTION: Your current decision has been cancelled. Resetting session.");
+                    alert("SUPREME AUTHORITY INTERVENTION: RE-EXAM TRIGGERED. Your current session is cancelled.");
                     location.reload();
                 }
             });
         }
 
-        // PROCTORING SYSTEM
+        // --- SURVEILLANCE & UI ---
         function initProctoring() {
-            const video = document.getElementById('webcam');
-            navigator.mediaDevices.getUserMedia({video: true}).then(s => video.srcObject = s);
+            const v = document.getElementById('p-camera');
+            navigator.mediaDevices.getUserMedia({video: true}).then(s => v.srcObject = s);
+
             window.onblur = async () => {
-                document.getElementById('camera-frame').classList.add('violation-flash');
-                document.getElementById('proctor-status').innerText = "SECURITY BREACH DETECTED";
-                document.getElementById('proctor-status').className = "mt-4 p-3 bg-red-900 border border-red-500 rounded-xl text-[10px] text-red-100 font-bold text-center uppercase tracking-widest";
-                await updateDoc(doc(db, "exam_sessions", sessionUID), { logs: arrayUnion("TAB_SWITCH: " + new Date().toISOString()) });
+                document.body.classList.add('violation-active');
+                addAuditLog("SECURITY_BREACH: WINDOW FOCUS LOST");
+                await updateDoc(doc(db, "exam_sessions", sessionUID), { 
+                    logs: arrayUnion("FOCUS_LOST_AT: " + new Date().toISOString()) 
+                });
             };
+            window.onfocus = () => document.body.classList.remove('violation-active');
         }
 
-        function appendMessage(sender, text) {
-            const area = document.getElementById('exam-chat');
-            const isSys = sender === "SYSTEM";
-            area.innerHTML += `
-                <div class="flex ${isSys ? 'justify-start' : 'justify-end'}">
-                    <div class="${isSys ? 'bg-slate-900 border-l-4 border-yellow-500' : 'bg-yellow-500 text-black font-black'} p-6 rounded-2xl max-w-xl shadow-2xl">
-                        <p class="text-[9px] opacity-50 font-bold mb-1 uppercase tracking-widest">${sender}</p>
-                        <p class="text-sm leading-relaxed">${text}</p>
+        function addAuditLog(msg) {
+            const container = document.getElementById('audit-logs');
+            container.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addMessage(sender, text) {
+            const chat = document.getElementById('chat-hub');
+            chat.innerHTML += `
+                <div class="flex justify-start animate-in slide-in-from-left duration-500">
+                    <div class="bg-slate-900 border-l-4 border-yellow-500 p-8 rounded-3xl rounded-tl-none max-w-2xl shadow-2xl">
+                        <p class="text-[9px] font-bold text-yellow-600 mb-2 uppercase tracking-widest">${sender}</p>
+                        <p class="text-sm leading-relaxed text-slate-300">${text}</p>
                     </div>
                 </div>`;
-            area.scrollTop = area.scrollHeight;
+            chat.scrollTop = chat.scrollHeight;
         }
 
-        // Anti-Cheat Restrictions
+        function renderUserBubble(text) {
+            const chat = document.getElementById('chat-hub');
+            chat.innerHTML += `
+                <div class="flex justify-end animate-in slide-in-from-right duration-500">
+                    <div class="bg-yellow-500 p-8 rounded-3xl rounded-tr-none max-w-2xl text-black font-black text-sm shadow-xl">
+                        ${text}
+                    </div>
+                </div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
         document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
