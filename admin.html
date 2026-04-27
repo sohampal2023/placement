@@ -1,27 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Admin Command Center | Placement Portal</title>
     <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <nav>
-        <h2>Admin Panel</h2>
-        <button onclick="logout()">Logout</button>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </head>
+<body class="admin-body">
+    <nav class="admin-nav">
+        <h1>Admin Control Panel</h1>
+        <div class="admin-profile">
+            <span>Logged in as: <b>admin@admin.com</b></span>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
     </nav>
-    <main>
-        <div class="stats">
-            <div class="card">Students Enrolled: <span id="studentCount">0</span></div>
-            <div class="card">Avg. Performance: <span id="avgScore">0%</span></div>
+
+    <div class="admin-grid">
+        <div class="stat-card">
+            <h3>Total Students Enrolled</h3>
+            <p id="studentCount" class="stat-number">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Overall Performance</h3>
+            <canvas id="performanceChart"></canvas>
         </div>
 
-        <section>
-            <h3>Manage Question Banks</h3>
-            <button>Appti Bank</button>
-            <button>Common Test Bank</button>
-            <button>AI Mode Interview Bank</button>
-        </section>
-    </main>
+        <div class="management-card">
+            <h3>Question Bank Management</h3>
+            <div class="bank-actions">
+                <button onclick="toggleBank('appti')">Appti Bank</button>
+                <button onclick="toggleBank('common')">Common Test Bank</button>
+                <button onclick="toggleBank('ai')">AI Mode Interview Bank</button>
+            </div>
+            <div id="bank-editor" class="editor-area">
+                <input type="text" id="newQuestion" placeholder="Enter new question...">
+                <button onclick="addQuestion()" class="add-btn">Add to Bank</button>
+                <ul id="questionList"></ul>
+            </div>
+        </div>
+
+        <div class="management-card proctor-logs">
+            <h3>Live Proctoring Violations</h3>
+            <table id="violationTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Violation Type</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="violationLog">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
     <script type="module" src="app.js"></script>
 </body>
 </html>
