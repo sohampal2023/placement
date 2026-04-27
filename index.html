@@ -86,15 +86,17 @@
                     <p class="text-[9px] text-slate-500 italic mt-4 text-center">Protocol 96: Forces target candidate browser into an immediate state-refresh.</p>
                 </div>
             </div>
-            <div class="stat-card mt-6">
+           <div class="stat-card mt-6">
     <h4 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">Command Mode</h4>
     <div class="flex gap-2">
-        <button onclick="setInterviewMode('AI')" class="flex-1 bg-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-yellow-600 transition-all">ACTIVATE AI</button>
-        <button onclick="setInterviewMode('LIVE')" class="flex-1 bg-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-red-700 transition-all">ACTIVATE LIVE</button>
+        <button onclick="setInterviewMode('AI')" class="flex-1 bg-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-yellow-600 transition-all">AI MODE</button>
+        <button onclick="setInterviewMode('LIVE')" class="flex-1 bg-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-red-700 transition-all">LIVE MODE</button>
     </div>
-    <div class="mt-4">
-        <input id="live-qn-input" type="text" placeholder="Type live question..." class="w-full bg-black border border-slate-800 p-3 rounded-xl text-xs text-white mb-2">
-        <button onclick="pushLiveQuestion(activeTargetUID)" class="w-full bg-red-600 py-3 rounded-xl text-[10px] font-black">INJECT QUESTION</button>
+    
+    <div class="mt-6 border-t border-slate-800 pt-4">
+        <h4 class="text-[9px] font-bold text-slate-500 uppercase mb-2">Live Injector</h4>
+        <input id="live-qn-input" type="text" placeholder="Type question..." class="w-full bg-black border border-slate-800 p-3 rounded-xl text-xs text-white mb-2 outline-none focus:border-red-600">
+        <button onclick="pushLiveQuestion(activeTargetUID)" class="w-full bg-red-900/40 border border-red-600/50 py-3 rounded-xl text-[10px] font-black hover:bg-red-600 transition-all">PUSH TO CANDIDATE</button>
     </div>
 </div>
             <div class="col-span-8 glass-module p-10 rounded-[2.5rem] overflow-hidden flex flex-col">
@@ -262,6 +264,14 @@ window.assignInterviewDate = async () => {
                             <td class="font-bold">${data.ai_score}%</td>
                             <td class="text-slate-500 uppercase text-[10px]">${data.status}</td>
                             <td class="text-right"><button onclick="setTarget('${d.id}')" class="bg-red-900/20 text-red-500 px-4 py-1 rounded-lg border border-red-900/40 hover:bg-red-700 hover:text-white transition-all">TARGET</button></td>
+                            <td class="text-right flex justify-end gap-2">
+    <button onclick="setTarget('${d.id}')" class="bg-red-900/20 text-red-500 px-4 py-1 rounded-lg border border-red-900/40 hover:bg-red-700 hover:text-white transition-all text-[10px] font-bold">
+        TARGET
+    </button>
+    <button onclick="setTarget('${d.id}'); assignInterviewDate();" class="bg-blue-900/20 text-blue-400 px-4 py-1 rounded-lg border border-blue-900/40 hover:bg-blue-600 hover:text-white transition-all text-[10px] font-bold">
+        SCHEDULE
+    </button>
+</td>
                         </tr>`;
                 });
             });
