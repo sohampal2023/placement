@@ -179,31 +179,32 @@ import {
     collection 
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
         // --- PINNED LOCATION: window.launchAdmin ---
+// --- PINNED LOCATION: Right after const app = initializeApp(firebaseConfig); ---
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Initialize global state variables
+let userUID = null;
+let activeTargetUID = null;
+let alertsCount = 0;// --- PINNED LOCATION: window.launchAdmin ---
 window.launchAdmin = async () => {
     const email = document.getElementById('adm-user').value.trim();
     const password = document.getElementById('adm-key').value;
     
-    // Check if fields are empty
-    if(!email || !password) return alert("Please enter both Email and Security Key.");
+    if(!email || !password) return alert("Credentials required.");
 
     try {
-        // Attempt actual Firebase Authentication
+        // Use the 'auth' variable initialized above
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
-        // Success Logic
         document.getElementById('gate-overlay').classList.add('hidden');
         document.getElementById('admin-hub').classList.remove('hidden');
         syncSurveillanceMatrix();
         
-        console.log("Supreme Admin Authenticated:", userCredential.user.email);
+        console.log("Access Granted:", userCredential.user.email);
     } catch (error) {
-        console.error("Auth Error Code:", error.code);
-        // Common error handling
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-            alert("ACCESS DENIED: Invalid Supreme Credentials. Check Firebase Authentication tab.");
-        } else {
-            alert("SYSTEM ERROR: " + error.message);
-        }
+        console.error("Auth Failure:", error.message);
+        alert("ACCESS DENIED: " + error.message);
     }
 };
         window.launchCandidate = async () => {
