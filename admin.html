@@ -2,58 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Command Center | Placement Portal</title>
+    <title>Admin Side | Command Center</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </head>
-<body class="admin-body">
-    <nav class="admin-nav">
-        <h1>Admin Control Panel</h1>
-        <div class="admin-profile">
-            <span>Logged in as: <b>admin@admin.com</b></span>
-            <button onclick="logout()" class="logout-btn">Logout</button>
+</head>
+<body class="admin-theme">
+    <nav class="top-nav">
+        <h2>ADMIN DASHBOARD</h2>
+        <div>
+            <span>ID: admin@admin.com</span>
+            <button id="logoutBtn">Logout</button>
         </div>
     </nav>
 
-    <div class="admin-grid">
-        <div class="stat-card">
-            <h3>Total Students Enrolled</h3>
-            <p id="studentCount" class="stat-number">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Overall Performance</h3>
-            <canvas id="performanceChart"></canvas>
-        </div>
-
-        <div class="management-card">
-            <h3>Question Bank Management</h3>
-            <div class="bank-actions">
-                <button onclick="toggleBank('appti')">Appti Bank</button>
-                <button onclick="toggleBank('common')">Common Test Bank</button>
-                <button onclick="toggleBank('ai')">AI Mode Interview Bank</button>
+    <div class="admin-content">
+        <div class="stats-row">
+            <div class="stat-card">
+                <h3>Students Enrolled</h3>
+                <p id="studentCount">0</p>
             </div>
-            <div id="bank-editor" class="editor-area">
-                <input type="text" id="newQuestion" placeholder="Enter new question...">
-                <button onclick="addQuestion()" class="add-btn">Add to Bank</button>
-                <ul id="questionList"></ul>
+            <div class="stat-card">
+                <h3>Active Tests</h3>
+                <p>Appti, Common, AI</p>
             </div>
         </div>
 
-        <div class="management-card proctor-logs">
-            <h3>Live Proctoring Violations</h3>
-            <table id="violationTable">
-                <thead>
-                    <tr>
-                        <th>Student ID</th>
-                        <th>Violation Type</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody id="violationLog">
-                    </tbody>
-            </table>
+        <div class="management-row">
+            <div class="card">
+                <h3>Manage Question Bank</h3>
+                <select id="bankType">
+                    <option value="appti">Appti Bank</option>
+                    <option value="common">Common Test</option>
+                    <option value="ai">AI Mode Interview</option>
+                </select>
+                <textarea id="qInput" placeholder="Enter question text..."></textarea>
+                <button id="addQBtn" class="btn-success">Add Question to Bank</button>
+            </div>
+
+            <div class="card">
+                <h3>Live Proctoring Alerts</h3>
+                <ul id="proctorLogs">
+                    </ul>
+            </div>
         </div>
     </div>
-
     <script type="module" src="app.js"></script>
 </body>
 </html>
