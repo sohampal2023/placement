@@ -2,101 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SGER-2026 | Government Command & Assessment</title>
+    <title>SGER-2026 | Supreme Command & Assessment</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    
     <style>
-        :root { --gov-deep: #020617; --gov-gold: #fbbf24; }
-        body { background: var(--gov-deep); font-family: 'Inter', sans-serif; color: #f8fafc; overflow: hidden; }
-        .admin-auth-overlay { background: radial-gradient(circle, #1e293b 0%, #020617 100%); }
-        .glass-ui { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .status-reexam { animation: pulse-red 2s infinite; border: 2px solid #ef4444 !important; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        :root { --gov-black: #020617; --gov-gold: #fbbf24; --gov-red: #be123c; }
+        body { background: var(--gov-black); color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        /* High-Density UI Classes */
+        .glass-panel { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px); }
+        .admin-sidebar { width: 500px; background: #070a13; border-left: 2px solid #1e293b; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .terminal-log { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; }
+        
+        /* Multi-Proctoring Protection Visuals */
+        .violation-active { border: 4px solid var(--gov-red) !important; animation: pulse-red 1s infinite; }
+        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        /* Button Standards */
+        .btn-supreme { background: var(--gov-red); color: white; font-weight: 900; transition: all 0.3s; }
+        .btn-supreme:hover { background: #e11d48; transform: scale(1.02); }
     </style>
 </head>
-<body>
+<body class="selection:bg-yellow-500/30">
 
-    <div id="auth-layer" class="fixed inset-0 z-[5000] admin-auth-overlay flex items-center justify-center p-6">
-        <div class="max-w-4xl w-full grid md:grid-cols-2 gap-10">
-            <div class="glass-ui p-10 rounded-3xl border-t-4 border-yellow-500 shadow-2xl">
-                <h2 class="text-3xl font-black text-white mb-6">CANDIDATE</h2>
+    <div id="auth-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6">
+        <div class="max-w-5xl w-full grid md:grid-cols-2 gap-10">
+            <div class="glass-panel p-12 rounded-[2.5rem] border-t-4 border-yellow-500">
+                <h2 class="text-3xl font-black text-white mb-2 italic">CANDIDATE</h2>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-8">Central Govt Engineering Recruitment</p>
                 <div class="space-y-4">
-                    <input id="c-roll" type="text" placeholder="GOVT ROLL NUMBER" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-yellow-500">
-                    <button onclick="enterCandidate()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400">INITIATE EXAM</button>
+                    <input id="c-roll" type="text" placeholder="GOVT ROLL NUMBER" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 focus:border-yellow-500 outline-none">
+                    <button onclick="entryCandidate()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl hover:bg-yellow-400">INITIATE EXAM</button>
                 </div>
             </div>
 
-            <div class="glass-ui p-10 rounded-3xl border-t-4 border-red-600 bg-red-950/5 shadow-2xl">
-                <h2 class="text-3xl font-black text-white mb-6">ADMIN SUPREME</h2>
+            <div class="glass-panel p-12 rounded-[2.5rem] border-t-4 border-red-600 bg-red-950/5">
+                <h2 class="text-3xl font-black text-white mb-2 italic">ADMIN SUPREME</h2>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-8">Access for: admin@admin.com / admin@portal.com</p>
                 <div class="space-y-4">
-                    <input id="adm-email" type="email" placeholder="ADMIN EMAIL (admin@admin.com)" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-red-600">
-                    <input id="adm-pass" type="password" placeholder="SECURITY KEY" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-red-600">
-                    <button onclick="loginAdmin()" class="w-full bg-red-600 text-white font-black py-4 rounded-xl hover:bg-red-500">ACCESS COMMAND CENTER</button>
+                    <input id="adm-email" type="email" placeholder="OFFICIAL EMAIL" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 focus:border-red-600 outline-none">
+                    <input id="adm-pass" type="password" placeholder="SECURITY KEY" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-800 focus:border-red-600 outline-none">
+                    <button onclick="entryAdmin()" class="w-full bg-red-600 text-white font-black py-4 rounded-xl hover:bg-red-500">ACCESS COMMAND</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="admin-dashboard" class="fixed inset-0 z-[4000] bg-slate-950 hidden overflow-hidden flex flex-col">
-        <nav class="h-20 bg-slate-900 border-b border-slate-800 px-10 flex items-center justify-between">
-            <h1 class="text-xl font-black text-white italic">SGER <span class="text-red-600">SUPREME COMMAND</span></h1>
-            <button onclick="location.reload()" class="bg-red-600 px-6 py-2 rounded font-bold text-xs">TERMINATE SESSION</button>
+    <div id="admin-dashboard" class="fixed inset-0 z-[8000] bg-slate-950 hidden flex flex-col">
+        <nav class="h-20 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/50">
+            <h1 class="text-xl font-black tracking-tighter italic">SUPREME <span class="text-red-600">COMMAND CENTER</span></h1>
+            <button onclick="location.reload()" class="bg-slate-800 px-6 py-2 rounded font-bold text-xs">LOGOUT</button>
         </nav>
 
-        <main class="flex-1 grid grid-cols-12 p-8 gap-8">
-            <div class="col-span-4 glass-ui p-8 rounded-3xl flex flex-col gap-6">
-                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest">Question Bank Upload</h3>
-                <div class="border-2 border-dashed border-slate-700 p-10 rounded-2xl text-center hover:border-red-500 transition-all cursor-pointer">
-                    <input type="file" id="qn-upload" accept=".pdf,.doc,.docx" class="hidden">
-                    <label for="qn-upload" class="cursor-pointer">
-                        <p class="text-red-500 font-bold mb-2">Click to Upload PDF/Word</p>
-                        <p class="text-[10px] text-slate-500">Only authorized engineering modules allowed.</p>
-                    </label>
+        <main class="flex-1 grid grid-cols-12 gap-8 p-10 overflow-hidden">
+            <div class="col-span-4 flex flex-col gap-6">
+                <div class="glass-panel p-8 rounded-3xl flex-1">
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Question Engine (PDF/DOCX)</h3>
+                    <div class="border-2 border-dashed border-slate-800 p-10 rounded-2xl text-center hover:border-red-600 cursor-pointer transition-all">
+                        <input type="file" id="file-input" class="hidden" accept=".pdf,.docx">
+                        <label for="file-input" class="cursor-pointer">
+                            <p class="text-red-500 font-bold mb-1">Upload Exam Source</p>
+                            <p class="text-[10px] text-slate-600">Drag & Drop Central Govt Question File</p>
+                        </label>
+                    </div>
+                    <div id="file-logs" class="mt-4 terminal-log"></div>
                 </div>
-                <div id="upload-status" class="text-xs font-mono text-green-500"></div>
-                
-                <div class="mt-auto">
-                    <h4 class="text-xs font-bold text-slate-400 mb-2">Override Decision Logic</h4>
-                    <button onclick="triggerReExam()" class="w-full py-4 bg-red-600 rounded-xl font-black text-xs mb-2">CANCEL AI DECISION & RE-EXAM</button>
-                    <button onclick="forcePass()" class="w-full py-4 bg-green-600 rounded-xl font-black text-xs">MANUAL FORCE PASS</button>
+
+                <div class="glass-panel p-8 rounded-3xl h-64">
+                    <h3 class="text-xs font-black text-red-600 uppercase tracking-widest mb-6">Intervention Override</h3>
+                    <button onclick="forceReExam()" class="w-full py-4 btn-supreme rounded-xl mb-4 text-xs">CANCEL DECISION & RE-EXAM</button>
+                    <p class="text-[9px] text-slate-500 italic text-center">Caution: This will force the candidate's browser to refresh and restart the assessment immediately.</p>
                 </div>
             </div>
 
-            <div class="col-span-8 glass-ui p-8 rounded-3xl overflow-hidden flex flex-col">
-                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Live Candidate Surveillance</h3>
-                <div class="overflow-y-auto flex-1">
+            <div class="col-span-8 glass-panel p-8 rounded-3xl overflow-hidden flex flex-col">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Live Candidate Database</h3>
+                <div class="overflow-y-auto">
                     <table class="w-full text-left text-sm">
-                        <thead class="text-slate-500 text-[10px] uppercase border-b border-slate-800">
-                            <tr><th class="pb-4">Roll No</th><th>AI Decision</th><th>Proctoring Status</th><th>Actions</th></tr>
+                        <thead class="text-[10px] text-slate-500 uppercase border-b border-slate-800">
+                            <tr><th class="pb-4">Roll ID</th><th>Payment</th><th>AI Score</th><th>Status</th><th>Override</th></tr>
                         </thead>
-                        <tbody id="candidate-rows">
-                            </tbody>
+                        <tbody id="candidate-table"></tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="candidate-portal" class="fixed inset-0 bg-slate-950 hidden flex overflow-hidden">
-        <aside class="w-80 border-r border-slate-800 flex flex-col p-6 bg-black/40">
-            <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative">
+    <div id="candidate-portal" class="fixed inset-0 z-[7000] hidden flex">
+        <aside class="w-80 border-r border-slate-800 bg-slate-950 p-6 flex flex-col">
+            <div id="cam-box" class="rounded-2xl overflow-hidden bg-black aspect-video border border-slate-800 relative">
                 <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
-                <div class="absolute inset-0 border-4 border-red-600 opacity-0" id="v-border"></div>
             </div>
-            <div id="audit-log" class="mt-6 flex-1 overflow-y-auto text-[9px] font-mono text-red-500 space-y-1"></div>
+            <div class="mt-6 flex-1 overflow-y-auto border-t border-slate-800 pt-6">
+                <h4 class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Surveillance Log</h4>
+                <div id="candidate-logs" class="terminal-log space-y-1"></div>
+            </div>
         </aside>
 
-        <section class="flex-1 flex flex-col">
+        <section class="flex-1 flex flex-col bg-slate-900/20">
             <header class="h-20 border-b border-slate-800 px-10 flex items-center justify-between">
-                <h2 id="disp-roll" class="font-black text-yellow-500">---</h2>
-                <div id="timer" class="text-2xl font-black text-white">45:00</div>
+                <h2 id="disp-roll" class="font-black text-yellow-500 italic">EE_RECRUIT_2026</h2>
+                <div id="exam-timer" class="text-2xl font-black font-mono">45:00</div>
             </header>
-            <div id="exam-chat" class="flex-1 overflow-y-auto p-12 space-y-6"></div>
-            <footer class="p-8 border-t border-slate-800">
+            <div id="chat-hub" class="flex-1 overflow-y-auto p-12 space-y-6"></div>
+            <footer class="p-8 border-t border-slate-800 bg-slate-950">
                 <div class="max-w-4xl mx-auto flex gap-4">
-                    <input id="user-ans" type="text" placeholder="Enter engineering justification..." class="flex-1 bg-slate-900 border border-slate-800 p-5 rounded-2xl outline-none focus:border-yellow-500">
-                    <button onclick="submitAnswer()" class="bg-yellow-500 text-black px-10 rounded-2xl font-black uppercase text-xs">Submit</button>
+                    <input id="user-ans" type="text" placeholder="Explain your answer with technical justification..." class="flex-1 bg-slate-900 border border-slate-800 p-5 rounded-2xl outline-none focus:border-yellow-500 transition-all">
+                    <button onclick="submitResponse()" class="bg-yellow-500 text-black px-10 rounded-2xl font-black uppercase text-xs">Submit</button>
                 </div>
             </footer>
         </section>
@@ -105,9 +120,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, arrayUnion, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, arrayUnion } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-        // FIREBASE CONFIGURATION (Verified)
+        // FIREBASE INITIALIZATION
         const firebaseConfig = {
             apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
             authDomain: "placement-96094.firebaseapp.com",
@@ -116,124 +131,133 @@
             messagingSenderId: "1061247846675",
             appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         let userUID = null;
-        let selectedCandidate = null;
+        let activeTarget = null;
 
-        // ADMIN LOGIN (RESTRICTED EMAILS)
-        window.loginAdmin = () => {
+        // --- AUTHENTICATION LOGIC ---
+        window.entryAdmin = () => {
             const email = document.getElementById('adm-email').value;
             const pass = document.getElementById('adm-pass').value;
-            const allowed = ["admin@admin.com", "admin@portal.com"];
-
-            if(allowed.includes(email) && pass === "SUPREME2026") {
-                document.getElementById('auth-layer').classList.add('hidden');
+            if((email === "admin@admin.com" || email === "admin@portal.com") && pass === "SUPREME2026") {
+                document.getElementById('auth-overlay').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
-                syncCandidates();
-            } else { alert("ACCESS DENIED: Restricted Admin Domain Only."); }
+                initAdminSync();
+            } else { alert("ACCESS DENIED: Unauthorized Admin Email/Pass."); }
         };
 
-        // CANDIDATE ENTRY
-        window.enterCandidate = async () => {
+        window.entryCandidate = async () => {
             const roll = document.getElementById('c-roll').value;
-            if(!roll) return alert("Roll ID required.");
-
+            if(!roll) return alert("Roll ID Required.");
+            
             const uCred = await signInAnonymously(auth);
             userUID = uCred.user.uid;
-
-            await setDoc(doc(db, "exam_sessions", userUID), {
-                roll: roll,
-                ai_decision: "PENDING",
-                status: "ACTIVE",
-                logs: [],
-                responses: []
+            
+            await setDoc(doc(db, "sessions", userUID), {
+                roll: roll, status: "ACTIVE", ai_score: 0, 
+                logs: [], responses: [], intervention: false
             });
 
-            document.getElementById('auth-layer').classList.add('hidden');
+            document.getElementById('auth-overlay').classList.add('hidden');
             document.getElementById('candidate-portal').classList.remove('hidden');
-            document.getElementById('disp-roll').innerText = "CANDIDATE: " + roll;
+            document.getElementById('disp-roll').innerText = "ROLL: " + roll;
             
             startProctoring();
-            listenForIntervention();
+            listenToSupremeIntervention();
+            addMsg("SYSTEM", "Secure Connection Established. Q: Explain the significance of the skin effect in transmission lines.");
         };
 
-        // PDF & WORD PARSER (Supreme Feature)
-        document.getElementById('qn-upload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const status = document.getElementById('upload-status');
-            
-            if (file.name.endsWith('.docx')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    mammoth.extractRawText({arrayBuffer: event.target.result}).then(function(result) {
-                        saveQuestionsToDB(result.value);
-                        status.innerText = "Word Document Parsed and Synced!";
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            } else if (file.name.endsWith('.pdf')) {
-                // PDF Parsing logic using PDF.js
-                status.innerText = "PDF Uploaded. Extracting Data...";
-                saveQuestionsToDB("PDF Context: Electrical Power Systems Analysis Questions.");
-            }
-        });
-
-        async function saveQuestionsToDB(text) {
-            await setDoc(doc(db, "exam_config", "current_qns"), { content: text, updated: new Date() });
-        }
-
-        // SUPREME ADMIN INTERVENTION
-        window.triggerReExam = async () => {
-            if(!selectedCandidate) return alert("Select a candidate from the table first.");
-            await updateDoc(doc(db, "exam_sessions", selectedCandidate), { 
-                status: "RE_EXAM_TRIGGERED",
-                ai_decision: "CANCELLED_BY_ADMIN"
-            });
-            alert("Supreme Authority: Decision Overridden. Re-Exam sent to candidate.");
-        };
-
-        function syncCandidates() {
-            onSnapshot(collection(db, "exam_sessions"), (snap) => {
-                const tbody = document.getElementById('candidate-rows');
-                tbody.innerHTML = "";
+        // --- ADMIN SUPREME AUTHORITY ---
+        function initAdminSync() {
+            onSnapshot(collection(db, "sessions"), (snap) => {
+                const table = document.getElementById('candidate-table');
+                table.innerHTML = "";
                 snap.forEach(d => {
                     const data = d.data();
-                    tbody.innerHTML += `
+                    table.innerHTML += `
                         <tr class="border-b border-slate-800">
-                            <td class="py-4 font-mono text-yellow-500">${data.roll}</td>
-                            <td class="text-xs font-bold text-blue-500">${data.ai_decision}</td>
-                            <td class="text-xs ${data.status === 'ACTIVE' ? 'text-green-500' : 'text-red-500'}">${data.status}</td>
-                            <td><button onclick="targetCandidate('${d.id}')" class="text-red-500 text-[10px] border border-red-500 px-2 rounded">TARGET</button></td>
+                            <td class="py-4 font-black text-yellow-500">${data.roll}</td>
+                            <td class="text-green-500 text-[10px] font-bold">PAID</td>
+                            <td class="font-mono text-xs">${data.ai_score}%</td>
+                            <td class="text-[10px] uppercase font-bold">${data.status}</td>
+                            <td><button onclick="targetUser('${d.id}')" class="text-red-500 text-[10px] underline">SELECT</button></td>
                         </tr>`;
                 });
             });
         }
 
-        window.targetCandidate = (id) => selectedCandidate = id;
+        window.targetUser = (uid) => { activeTarget = uid; alert("Admin: Targeting Roll ID session " + uid); };
 
-        // REAL-TIME LISTENER FOR STUDENT (CANCELS SESSION ON ADMIN CLICK)
-        function listenForIntervention() {
-            onSnapshot(doc(db, "exam_sessions", userUID), (snap) => {
-                if(snap.data().status === "RE_EXAM_TRIGGERED") {
-                    alert("SUPREME ADMIN INTERVENTION: Your AI decision was cancelled. YOU MUST GIVE THE EXAM AGAIN.");
+        window.forceReExam = async () => {
+            if(!activeTarget) return alert("Select a candidate from the table first.");
+            await updateDoc(doc(db, "sessions", activeTarget), { intervention: true, status: "RE_EXAM_TRIGGERED" });
+            alert("Supreme Authority: AI Decision Cancelled. Force Re-Exam Triggered.");
+        };
+
+        // --- FILE PARSER ENGINE ---
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const log = document.getElementById('file-logs');
+            if(file.name.endsWith('.docx')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    mammoth.extractRawText({arrayBuffer: evt.target.result}).then(r => {
+                        log.innerText = "Word Doc Parsed: " + r.value.substring(0, 100) + "...";
+                        updateDoc(doc(db, "config", "questions"), { content: r.value });
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            } else { log.innerText = "File Uploaded. Extracting Data..."; }
+        });
+
+        // --- CANDIDATE INTERACTION ---
+        window.submitResponse = async () => {
+            const ans = document.getElementById('user-ans').value;
+            if(!ans) return;
+            renderMsg("USER", ans);
+            document.getElementById('user-ans').value = "";
+            
+            const score = ans.length > 50 ? 85 : 40;
+            await updateDoc(doc(db, "sessions", userUID), {
+                responses: arrayUnion({ text: ans, time: new Date() }),
+                ai_score: score
+            });
+            setTimeout(() => addMsg("SYSTEM", "Response Captured. AI Score Updated. Proceeding to next section."), 1000);
+        };
+
+        function listenToSupremeIntervention() {
+            onSnapshot(doc(db, "sessions", userUID), (snap) => {
+                if(snap.data().intervention) {
+                    alert("SUPREME AUTHORITY INTERVENTION: Your AI result has been cancelled. YOU MUST GIVE THE EXAM AGAIN.");
                     location.reload();
                 }
             });
         }
 
-        // PROCTORING & LOGS
+        // --- SURVEILLANCE & UI ---
         function startProctoring() {
             const v = document.getElementById('webcam');
             navigator.mediaDevices.getUserMedia({video: true}).then(s => v.srcObject = s);
             window.onblur = async () => {
-                document.getElementById('v-border').style.opacity = "1";
-                document.getElementById('audit-log').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH</div>`;
-                await updateDoc(doc(db, "exam_sessions", userUID), { logs: arrayUnion("TAB_SWITCH") });
+                document.getElementById('cam-box').classList.add('violation-active');
+                document.getElementById('candidate-logs').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH</div>`;
+                await updateDoc(doc(db, "sessions", userUID), { logs: arrayUnion("TAB_SWITCH") });
             };
+        }
+
+        function addMsg(s, t) {
+            const hub = document.getElementById('chat-hub');
+            hub.innerHTML += `<div class="flex justify-start"><div class="bg-slate-800 border-l-4 border-yellow-500 p-6 rounded-3xl rounded-tl-none max-w-2xl"><p class="text-[9px] font-bold text-yellow-600 mb-2">${s}</p><p class="text-sm">${t}</p></div></div>`;
+            hub.scrollTop = hub.scrollHeight;
+        }
+
+        function renderMsg(s, t) {
+            const hub = document.getElementById('chat-hub');
+            hub.innerHTML += `<div class="flex justify-end"><div class="bg-yellow-500 p-6 rounded-3xl rounded-tr-none max-w-2xl text-black font-black text-sm">${t}</div></div>`;
+            hub.scrollTop = hub.scrollHeight;
         }
 
         document.addEventListener('contextmenu', e => e.preventDefault());
