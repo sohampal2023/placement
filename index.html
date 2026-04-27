@@ -66,26 +66,42 @@
         </nav>
 
         <main class="flex-1 grid grid-cols-12 gap-10 p-12 overflow-hidden">
-            <div class="col-span-4 flex flex-col gap-8">
-                <div class="glass-module p-10 rounded-[2.5rem] flex-1 flex flex-col">
-                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Question Engine (AI-Parser)</h3>
-                    <div class="flex-1 border-4 border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center p-8 hover:border-red-600 cursor-pointer transition-all group">
-                        <input type="file" id="file-uploader" class="hidden" accept=".pdf,.docx">
-                        <label for="file-uploader" class="cursor-pointer text-center">
-                            <span class="text-5xl mb-4 block group-hover:scale-110 transition-transform">📄</span>
-                            <p class="text-red-500 font-bold">Inject PDF/Word Bank</p>
-                            <p class="text-[10px] text-slate-500 mt-2 uppercase">Central Govt Standards Only</p>
-                        </label>
-                    </div>
-                    <div id="parse-status" class="mt-4 mono text-[10px] text-blue-400 h-20 overflow-y-auto bg-black/40 p-3 rounded-lg border border-slate-800">System Ready for Injection...</div>
-                </div>
+            <div class="col-span-4 flex flex-col gap-6 overflow-y-auto pr-2">
+    
+    <div class="glass-module p-8 rounded-[2.5rem] flex flex-col min-h-[300px]">
+        <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Question Engine</h3>
+        <div class="flex-1 border-2 border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center p-6 hover:border-red-600 cursor-pointer transition-all group">
+            <input type="file" id="file-uploader" class="hidden" accept=".pdf,.docx">
+            <label for="file-uploader" class="cursor-pointer text-center">
+                <span class="text-4xl mb-2 block group-hover:scale-110 transition-transform">📄</span>
+                <p class="text-red-500 font-bold text-sm">Inject Bank</p>
+            </label>
+        </div>
+        <div id="parse-status" class="mt-4 mono text-[9px] text-blue-400 bg-black/40 p-3 rounded-lg border border-slate-800">Ready...</div>
+    </div>
 
-                <div class="stat-card">
-                    <h4 class="text-xs font-black text-red-600 uppercase tracking-widest mb-4">Intervention Terminal</h4>
-                    <button onclick="supremeOverride()" class="w-full py-5 btn-supreme rounded-2xl text-xs shadow-2xl">CANCEL DECISION & RE-EXAM</button>
-                    <p class="text-[9px] text-slate-500 italic mt-4 text-center">Protocol 96: Forces target candidate browser into an immediate state-refresh.</p>
-                </div>
-            </div>
+    <div class="stat-card">
+        <h4 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">Control Center</h4>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <button onclick="setInterviewMode('AI')" class="bg-slate-900 border border-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-yellow-600 hover:text-black transition-all">AI MODE</button>
+            <button onclick="setInterviewMode('LIVE')" class="bg-slate-900 border border-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-red-700 transition-all">LIVE MODE</button>
+        </div>
+        
+        <div class="space-y-2">
+            <label class="text-[9px] font-bold text-slate-500 uppercase">Live Injector</label>
+            <textarea id="live-qn-input" rows="2" placeholder="Enter question to push..." class="w-full bg-black border border-slate-800 p-3 rounded-xl text-xs text-white outline-none focus:border-red-600"></textarea>
+            <button onclick="pushLiveQuestion(window.activeTargetUID)" 
+        class="w-full bg-red-900/40 border border-red-600/50 py-3 rounded-xl text-[10px] font-black hover:bg-red-600 transition-all">
+    PUSH TO CANDIDATE
+</button>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <h4 class="text-xs font-black text-red-600 uppercase tracking-widest mb-4">Supreme Action</h4>
+        <button onclick="supremeOverride()" class="w-full py-4 btn-supreme rounded-2xl text-[10px] shadow-2xl">CANCEL & RE-EXAM</button>
+    </div>
+</div>
            <div class="stat-card mt-6">
     <h4 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">Command Mode</h4>
     <div class="flex gap-2">
@@ -180,14 +196,21 @@
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    // --- PINNED LOCATION: Top of Module Script ---
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    // Global Variables
-    let userUID = null;
-    let activeTargetUID = null;
-    let alertsCount = 0;
+// Use 'window' to make these accessible to HTML onclick events
+window.activeTargetUID = null; 
+window.userUID = null;
+window.alertsCount = 0;
+
+// Update your setTarget function as well
+window.setTarget = (uid) => { 
+    window.activeTargetUID = uid; 
+    alert("Target Locked: " + uid); 
+};
 
 // --- CRITICAL FIX: EXPOSE TO WINDOW ---
 window.launchAdmin = async () => {
@@ -294,21 +317,24 @@ window.assignInterviewDate = async () => {
         };
 
         // --- FILE PARSER ENGINE (PDF/DOCX) ---
-        document.getElementById('file-uploader').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const log = document.getElementById('parse-status');
-            if(file.name.endsWith('.docx')) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    mammoth.extractRawText({arrayBuffer: evt.target.result}).then(res => {
-                        log.innerText = `[PARSING WORD] SUCCESS: Found ${res.value.length} chars. Data encrypted to cloud.`;
-                        setDoc(doc(db, "config", "questions"), { text: res.value });
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            } else { log.innerText = "Processing PDF Injection Logic..."; }
-        });
+        // --- PINNED LOCATION: document.getElementById('file-uploader').addEventListener ---
+document.getElementById('file-uploader').addEventListener('change', function(e) {
+    // FIX: Check if files exist first
+    if (!e.target.files || e.target.files.length === 0) {
+        return; 
+    }
 
+    const file = e.target.files[0];
+    const log = document.getElementById('parse-status');
+    
+    // Now it is safe to read file.name
+    if(file.name.endsWith('.docx')) {
+        log.innerText = "Processing Word Document...";
+        // ... rest of your mammoth logic
+    } else {
+        log.innerText = "Processing PDF Injection...";
+    }
+});
         // --- CANDIDATE INTERFACE LOGIC ---
         function initExamEngine() {
             appendChatBubble("SYSTEM", "Secure Handshake Complete. Question 1: Explain the Ferranti effect in the context of high-voltage transmission lines.");
