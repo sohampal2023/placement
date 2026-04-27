@@ -3,241 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Govt-EE | Central Engineering Assessment</title>
+    <title>Govt-EE | Supreme Proctored Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
     <style>
-        .admin-glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); }
-        .secure-input { background: #0f172a; border: 1px solid #334155; color: white; }
-        .electrical-glow { box-shadow: 0 0 15px rgba(234, 179, 8, 0.3); }
+        .scanline {
+            width: 100%; height: 2px; background: rgba(255, 0, 0, 0.3);
+            position: absolute; animation: scan 3s linear infinite; z-index: 10;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        .danger-border { border: 2px solid #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
+        .admin-panel { background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(20px); }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-200 font-sans overflow-hidden">
+<body class="bg-[#020617] text-slate-100 font-mono overflow-hidden">
 
     <div id="setup-overlay" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-4">
-        <div class="max-w-md w-full bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-2xl">
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">⚡</div>
-                <h1 class="text-2xl font-bold text-white">Central Govt. Portal</h1>
-                <p class="text-slate-400 text-sm">Electrical Engineering Restricted Access</p>
+        <div class="max-w-md w-full bg-slate-900 border-t-4 border-yellow-600 p-8 rounded-b-3xl shadow-2xl">
+            <h1 class="text-2xl font-black mb-2 text-center text-white">OFFICIAL EXAM GATEWAY</h1>
+            <p class="text-xs text-slate-500 text-center mb-8 uppercase tracking-widest">Department of Technical Recruitment</p>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] text-yellow-600 font-bold">SELECT EXAMINATION TRACK</label>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <button onclick="selectTrack('Electrical Engineering')" id="btn-ee" class="p-4 border border-slate-700 rounded-xl hover:bg-yellow-600/10 transition-all text-sm font-bold">ELECTRICAL ENGINEERING</button>
+                        <button onclick="selectTrack('Government Job Exam')" id="btn-gov" class="p-4 border border-slate-700 rounded-xl hover:bg-yellow-600/10 transition-all text-sm font-bold">GOVERNMENT JOB EXAM</button>
+                    </div>
+                </div>
+                <input id="roll-no" type="text" placeholder="ENTER GOVT ROLL NUMBER" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-center outline-none focus:border-yellow-600">
+                <button onclick="initSecureTest()" class="w-full bg-yellow-600 text-black font-black py-4 rounded-xl hover:bg-yellow-500">INITIATE SECURE SESSION</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="fixed inset-0 z-[150] admin-panel hidden p-10">
+        <div class="max-w-6xl mx-auto h-full flex flex-col">
+            <div class="flex justify-between items-end mb-10 border-b border-slate-800 pb-5">
+                <div>
+                    <h2 class="text-3xl font-black text-red-600 uppercase italic">Supreme Authority</h2>
+                    <p class="text-xs text-slate-500">Direct Intervention & Surveillance</p>
+                </div>
+                <button onclick="toggleAdmin()" class="bg-slate-800 px-6 py-2 rounded text-xs font-bold">BACK TO MONITOR</button>
+            </div>
+
+            <div class="grid grid-cols-12 gap-8 flex-1 overflow-hidden">
+                <div class="col-span-4 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                        <h3 class="text-xs font-bold text-yellow-600 mb-4 uppercase">Control Mode</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="switchMode('AI')" id="mode-ai" class="bg-yellow-600 text-black p-2 rounded text-xs font-bold">AI MODE</button>
+                            <button onclick="switchMode('LIVE')" id="mode-live" class="bg-slate-800 p-2 rounded text-xs font-bold">LIVE ADMIN</button>
+                        </div>
+                        <div id="live-qn-area" class="mt-6 hidden">
+                            <textarea id="admin-msg" class="w-full bg-black border border-slate-700 rounded p-3 text-xs h-24 mb-2" placeholder="Send direct command/question..."></textarea>
+                            <button onclick="pushAdminMessage()" class="w-full bg-red-600 p-3 rounded font-bold text-xs">INJECT LIVE QUESTION</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex-1">
+                        <h3 class="text-xs font-bold text-blue-400 mb-4 uppercase">Candidate List (Paid)</h3>
+                        <div id="candidate-list" class="space-y-3 overflow-y-auto max-h-64 text-[10px]">
+                            <div class="flex justify-between border-b border-slate-800 pb-2">
+                                <span>ID: EE-991 (S. Varma)</span>
+                                <span class="text-green-500">PAID & VERIFIED</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-8 bg-black rounded-2xl border border-red-900/50 p-6 flex flex-col">
+                    <h3 class="text-xs font-bold text-red-500 mb-4 uppercase">Live Multi-Proctoring Stream</h3>
+                    <div class="flex-1 bg-slate-900 rounded-xl relative overflow-hidden">
+                        <div class="scanline"></div>
+                        <video id="admin-view" class="w-full h-full object-cover opacity-60" autoplay playsinline></video>
+                        <div class="absolute top-4 right-4 flex flex-col gap-2">
+                            <div id="p-face" class="bg-red-600/20 text-red-500 px-2 py-1 text-[8px] border border-red-500">FACE DETECTED</div>
+                            <div id="p-tabs" class="bg-green-600/20 text-green-500 px-2 py-1 text-[8px] border border-green-500">TABS SECURE</div>
+                            <div id="p-pay" class="bg-blue-600/20 text-blue-500 px-2 py-1 text-[8px] border border-blue-500">FEE VERIFIED</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="grid grid-cols-12 h-screen">
+        <div class="col-span-3 border-r border-slate-800 flex flex-col bg-slate-950">
+            <div class="p-6">
+                <div class="danger-border rounded-xl relative overflow-hidden aspect-video bg-black">
+                    <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <div id="status-tag" class="text-[9px] bg-red-600 text-white font-bold px-2 py-1 rounded text-center">SYSTEM ARMED: MULTI-PROCTORING ON</div>
+                </div>
             </div>
             
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Select Exam Body</label>
-                    <select id="exam-body" class="w-full secure-input p-3 rounded-xl outline-none focus:border-yellow-500">
-                        <option value="IES">IES / ESE (Engineering Services)</option>
-                        <option value="GATE">GATE (Central PSU Recruitment)</option>
-                        <option value="SSC">SSC Junior Engineer (Electrical)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Govt Roll Number / ID</label>
-                    <input id="gov-id" type="text" class="w-full secure-input p-3 rounded-xl outline-none focus:border-yellow-500" placeholder="e.g. EE-2026-991">
-                </div>
-                <div class="p-3 bg-blue-900/20 rounded-xl border border-blue-500/30">
-                    <p class="text-[11px] text-blue-300 italic">Notice: Access is restricted to Electrical Engineering students from Central Govt Institutions only.</p>
-                </div>
-                <button onclick="validateEntry()" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 rounded-xl transition-all">Start Examination</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-panel" class="fixed inset-0 z-[150] admin-glass hidden p-8 overflow-y-auto">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-10 border-b border-slate-800 pb-5">
-                <h2 class="text-3xl font-black text-yellow-500 tracking-tighter uppercase">Supreme Command Center</h2>
-                <button onclick="toggleAdmin()" class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg font-bold text-sm transition-all">Exit Admin Mode</button>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Interrogation Mode</h3>
-                    <div class="flex gap-2 p-1 bg-black rounded-xl">
-                        <button onclick="setMode('AI')" id="ai-btn" class="flex-1 py-2 rounded-lg font-bold text-sm bg-yellow-600">AI MODE</button>
-                        <button onclick="setMode('LIVE')" id="live-btn" class="flex-1 py-2 rounded-lg font-bold text-sm">LIVE ADMIN</button>
-                    </div>
-                    <div id="live-controls" class="mt-6 hidden">
-                        <textarea id="live-qn-input" class="w-full bg-black border border-slate-700 rounded-xl p-4 text-sm mb-2 h-24" placeholder="Type direct question to student..."></textarea>
-                        <button onclick="pushQuestion()" class="w-full bg-blue-600 p-3 rounded-lg font-bold hover:bg-blue-500">PUSH LIVE QUESTION</button>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Registered Candidates & Payments</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="text-[10px] text-slate-500 border-b border-slate-800 uppercase">
-                                <tr>
-                                    <th class="pb-3">Candidate ID</th>
-                                    <th class="pb-3">Exam Type</th>
-                                    <th class="pb-3">Payment Status</th>
-                                    <th class="pb-3">Live Proctoring</th>
-                                </tr>
-                            </thead>
-                            <tbody id="candidate-data" class="text-sm">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <nav class="h-16 px-8 flex items-center justify-between border-b border-slate-800 bg-slate-900/50">
-        <div class="flex items-center gap-6">
-            <span class="text-xl font-black text-white">Govt<span class="text-yellow-500">EE</span></span>
-            <span id="active-exam" class="text-[10px] bg-slate-800 px-3 py-1 rounded text-slate-400 font-bold uppercase tracking-widest"></span>
-        </div>
-        <div class="flex items-center gap-4">
-            <div id="timer" class="text-yellow-500 font-mono bg-yellow-500/10 px-4 py-1 rounded border border-yellow-500/20">45:00</div>
-            <div id="p-status" class="text-[10px] text-green-500 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">ACTIVE</div>
-        </div>
-    </nav>
-
-    <main class="grid grid-cols-12 gap-6 p-6 h-[calc(100vh-64px)]">
-        <div class="col-span-3 space-y-6">
-            <div class="electrical-glow rounded-2xl overflow-hidden bg-black aspect-video border-2 border-yellow-600/50">
-                <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-full overflow-y-auto">
-                <h4 class="text-[10px] font-bold text-slate-500 mb-4 tracking-widest uppercase">Security Audit Log</h4>
-                <div id="audit-logs" class="space-y-2 font-mono text-[10px] text-red-400"></div>
+            <div class="flex-1 p-6 overflow-y-auto border-t border-slate-800">
+                <h4 class="text-[10px] text-slate-500 font-bold mb-4 uppercase tracking-widest">Proctoring Logs (Real-Time)</h4>
+                <div id="logs" class="space-y-2 text-[9px] font-mono"></div>
             </div>
         </div>
 
-        <div class="col-span-9 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col overflow-hidden relative shadow-2xl">
-            <div id="chat-container" class="flex-1 overflow-y-auto p-8 space-y-6 bg-black/20">
-                <div class="flex gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-yellow-600 flex items-center justify-center">🏛️</div>
-                    <div class="bg-slate-800 p-5 rounded-2xl rounded-tl-none max-w-2xl border border-slate-700">
-                        <p class="text-slate-300 font-medium">Welcome Candidate. The AI is analyzing your eligibility. Explain the primary function of a **Protection Relay** in a power system network.</p>
-                    </div>
+        <div class="col-span-9 flex flex-col bg-slate-900/50">
+            <header class="h-16 border-b border-slate-800 px-8 flex justify-between items-center bg-slate-900">
+                <div class="flex items-center gap-4">
+                    <span class="text-yellow-600 font-black tracking-tighter">GOVT-EE // 2026</span>
+                    <span id="display-track" class="text-[10px] border border-slate-700 px-2 py-1 rounded text-slate-400 font-bold"></span>
                 </div>
-            </div>
+                <div id="clock" class="text-xl font-bold font-mono text-white">45:00</div>
+            </header>
 
-            <div class="p-6 bg-slate-900 border-t border-slate-800">
-                <div class="flex gap-4">
-                    <input id="user-response" type="text" class="flex-1 bg-black border border-slate-700 rounded-xl px-6 py-4 outline-none focus:border-yellow-500 transition-all" placeholder="Enter your technical response...">
-                    <button onclick="submitResponse()" class="bg-yellow-600 px-8 rounded-xl font-bold hover:bg-yellow-500 transition-all text-black">SUBMIT</button>
+            <div id="chat-area" class="flex-1 overflow-y-auto p-12 space-y-8 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                </div>
+
+            <div class="p-8 border-t border-slate-800 bg-slate-950">
+                <div class="max-w-4xl mx-auto flex gap-4">
+                    <input id="user-input" type="text" placeholder="ENTER TECHNICAL RESPONSE..." class="flex-1 bg-black border border-slate-700 rounded-xl px-6 py-4 outline-none focus:border-yellow-600 text-sm">
+                    <button onclick="submitMessage()" class="bg-yellow-600 text-black px-10 rounded-xl font-black text-sm hover:bg-yellow-500">SUBMIT</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <button onclick="toggleAdmin()" class="fixed bottom-2 right-2 opacity-5 hover:opacity-100 bg-slate-800 text-[8px] p-1 rounded">MASTER</button>
+    <button onclick="toggleAdmin()" class="fixed bottom-2 right-2 opacity-0 w-10 h-10 cursor-default">.</button>
 
     <script>
-        let examMode = "AI"; 
-        const qBank = [
-            { q: "Define the significance of Load Angle in Synchronous Machines.", a: ["stability", "torque", "rotor", "stator"] },
-            { q: "What happens if a DC Series motor is started without load?", a: ["speed", "infinite", "damage", "centrifugal"] }
-        ];
-        let currentQ = 0;
+        let selectedTrack = "";
+        let currentMode = "AI";
+        let logs = document.getElementById('logs');
 
-        // 1. Validation Logic
-        function validateEntry() {
-            const id = document.getElementById('gov-id').value;
-            const exam = document.getElementById('exam-body').value;
-            if(!id) return alert("Valid Roll Number Required");
-            
-            document.getElementById('active-exam').innerText = exam;
+        // TRACK SELECTION
+        function selectTrack(track) {
+            selectedTrack = track;
+            document.getElementById('btn-ee').className = track === 'Electrical Engineering' ? 'p-4 border-2 border-yellow-600 bg-yellow-600/10 rounded-xl text-sm font-bold' : 'p-4 border border-slate-700 rounded-xl text-sm font-bold';
+            document.getElementById('btn-gov').className = track === 'Government Job Exam' ? 'p-4 border-2 border-yellow-600 bg-yellow-600/10 rounded-xl text-sm font-bold' : 'p-4 border border-slate-700 rounded-xl text-sm font-bold';
+        }
+
+        // INITIALIZE SYSTEM
+        function initSecureTest() {
+            if(!selectedTrack || !document.getElementById('roll-no').value) return alert("All fields required for Govt. Access.");
             document.getElementById('setup-overlay').style.display = 'none';
-            startCamera();
-            initMockData();
+            document.getElementById('display-track').innerText = selectedTrack;
+            startProctoring();
+            addLog("System initialized. Multi-proctoring layers 1, 2, and 3 active.");
+            addMessage("SYSTEM", `Welcome Candidate. Your attempt for ${selectedTrack} has started. Explain the difference between 'Step Potential' and 'Touch Potential' in substation grounding.`);
         }
 
-        // 2. Admin Logic
+        // MULTI-PROCTORING LOGIC
+        function addLog(msg) {
+            const div = document.createElement('div');
+            div.className = "text-red-500 border-l border-red-500 pl-2 py-1";
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.prepend(div);
+        }
+
+        window.onblur = () => {
+            addLog("CRITICAL ALERT: Tab switch/Window focus lost. Flagging for Admin.");
+            document.getElementById('p-tabs').className = "bg-red-600 text-white px-2 py-1 text-[8px] border border-red-500";
+            document.getElementById('p-tabs').innerText = "SECURITY BREACH: TABS";
+        };
+
+        // ADMIN CONTROLS
         function toggleAdmin() {
-            const panel = document.getElementById('admin-panel');
-            panel.classList.toggle('hidden');
+            document.getElementById('admin-panel').classList.toggle('hidden');
         }
 
-        function setMode(mode) {
-            examMode = mode;
-            document.getElementById('ai-btn').className = mode === 'AI' ? 'flex-1 py-2 rounded-lg font-bold text-sm bg-yellow-600' : 'flex-1 py-2 rounded-lg font-bold text-sm';
-            document.getElementById('live-btn').className = mode === 'LIVE' ? 'flex-1 py-2 rounded-lg font-bold text-sm bg-blue-600' : 'flex-1 py-2 rounded-lg font-bold text-sm';
-            document.getElementById('live-controls').classList.toggle('hidden', mode === 'AI');
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('mode-ai').className = mode === 'AI' ? 'bg-yellow-600 text-black p-2 rounded text-xs font-bold' : 'bg-slate-800 p-2 rounded text-xs font-bold';
+            document.getElementById('mode-live').className = mode === 'LIVE' ? 'bg-red-600 text-white p-2 rounded text-xs font-bold' : 'bg-slate-800 p-2 rounded text-xs font-bold';
+            document.getElementById('live-qn-area').classList.toggle('hidden', mode === 'AI');
         }
 
-        function pushQuestion() {
-            const qn = document.getElementById('live-qn-input').value;
-            if(!qn) return;
-            addChatMessage("SUPREME ADMIN", qn, true);
-            document.getElementById('live-qn-input').value = "";
+        function pushAdminMessage() {
+            const msg = document.getElementById('admin-msg').value;
+            if(!msg) return;
+            addMessage("ADMIN SUPREME", msg, true);
+            document.getElementById('admin-msg').value = "";
             toggleAdmin();
         }
 
-        // 3. Chat & AI Logic
-        function addChatMessage(sender, text, isLive = false) {
-            const chat = document.getElementById('chat-container');
-            const color = isLive ? "bg-red-900/40 border-red-500" : "bg-slate-800 border-slate-700";
-            const icon = isLive ? "🔴" : "🏛️";
+        // COMMUNICATION FLOW
+        function addMessage(sender, text, isSpecial = false) {
+            const chat = document.getElementById('chat-area');
+            const color = isSpecial ? "border-red-600 bg-red-950/20 shadow-[0_0_15px_rgba(220,38,38,0.3)]" : "border-slate-700 bg-slate-800/50";
+            const senderColor = isSpecial ? "text-red-500" : "text-yellow-600";
             
             chat.innerHTML += `
-                <div class="flex gap-4 animate-slide-in">
-                    <div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center">${icon}</div>
-                    <div class="${color} p-5 rounded-2xl rounded-tl-none max-w-2xl border">
-                        <p class="text-slate-300">${text}</p>
+                <div class="flex gap-6 animate-pulse-once">
+                    <div class="w-12 h-12 bg-slate-800 border border-slate-700 rounded-xl flex items-center justify-center font-black">${sender[0]}</div>
+                    <div class="flex-1 ${color} border p-6 rounded-2xl rounded-tl-none">
+                        <p class="${senderColor} text-[10px] font-bold mb-2 uppercase tracking-widest">${sender}</p>
+                        <p class="text-slate-200 text-sm leading-relaxed">${text}</p>
                     </div>
                 </div>`;
             chat.scrollTop = chat.scrollHeight;
         }
 
-        function submitResponse() {
-            const input = document.getElementById('user-response');
+        function submitMessage() {
+            const input = document.getElementById('user-input');
             if(!input.value) return;
             
-            const chat = document.getElementById('chat-container');
+            const chat = document.getElementById('chat-area');
             chat.innerHTML += `
-                <div class="flex gap-4 justify-end">
-                    <div class="bg-yellow-600 p-5 rounded-2xl rounded-tr-none max-w-2xl text-black font-medium">
-                        <p>${input.value}</p>
+                <div class="flex gap-6 justify-end">
+                    <div class="bg-yellow-600 p-6 rounded-2xl rounded-tr-none max-w-2xl text-black font-bold text-sm shadow-xl">
+                        ${input.value}
                     </div>
                 </div>`;
             
             input.value = "";
-            
-            if(examMode === "AI") {
+            chat.scrollTop = chat.scrollHeight;
+
+            if(currentMode === "AI") {
                 setTimeout(() => {
-                    currentQ++;
-                    if(currentQ < qBank.length) {
-                        addChatMessage("Govt-AI", qBank[currentQ].q);
-                    } else {
-                        addChatMessage("Govt-AI", "Assessment Completed. Your results are being transmitted to the Central Ministry.");
-                    }
-                }, 1500);
+                    addMessage("GOVT-AI", "Candidate response recorded. Proceeding to Electrical Machines: Explain why a Transformer does not work on DC supply.");
+                }, 2000);
             }
         }
 
-        // 4. Monitoring & Data
-        function startCamera() {
+        function startProctoring() {
             const video = document.getElementById('webcam');
-            const camera = new Camera(video, {
-                onFrame: async () => {}, // Face detection logic would go here
-                width: 640, height: 480
-            });
-            camera.start();
-        }
-
-        function initMockData() {
-            const table = document.getElementById('candidate-data');
-            const names = ["S. Kumar", "A. Verma", "R. Singh"];
-            names.forEach(name => {
-                table.innerHTML += `
-                    <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-all">
-                        <td class="py-4 font-mono text-yellow-500">${name}</td>
-                        <td>IES-2026</td>
-                        <td><span class="text-green-500 bg-green-500/10 px-2 py-1 rounded text-[10px]">PAID</span></td>
-                        <td><span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Streaming</span></td>
-                    </tr>`;
+            const adminVideo = document.getElementById('admin-view');
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                video.srcObject = stream;
+                adminVideo.srcObject = stream;
             });
         }
 
-        window.onblur = () => {
-            const log = document.getElementById('audit-logs');
-            log.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH DETECTED</div>`;
+        // Anti-Right Click & Copy
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.ctrlKey && (e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 85 || e.keyCode === 73)) {
+                addLog("ALERT: Restricted shortcut attempt.");
+                return false;
+            }
         };
     </script>
 </body>
