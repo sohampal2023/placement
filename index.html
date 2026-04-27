@@ -163,30 +163,20 @@
     <script type="module">
        // --- PINNED LOCATION: Top of Script Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { 
-    getAuth, 
-    signInAnonymously, 
-    signInWithEmailAndPassword // ADD THIS
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc, // ADD THIS
-    updateDoc, 
-    onSnapshot, 
-    arrayUnion, 
-    collection 
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-        // --- PINNED LOCATION: window.launchAdmin ---
-// --- PINNED LOCATION: Right after const app = initializeApp(firebaseConfig); ---
-const db = getFirestore(app);
-const auth = getAuth(app);
+import { getAuth, signInAnonymously, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, arrayUnion } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-// Initialize global state variables
+// 1. Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// 2. Define auth and db globally within this script
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Global Variables
 let userUID = null;
 let activeTargetUID = null;
-let alertsCount = 0;// --- PINNED LOCATION: window.launchAdmin ---
+// --- PINNED LOCATION: window.launchAdmin ---
 window.launchAdmin = async () => {
     const email = document.getElementById('adm-user').value.trim();
     const password = document.getElementById('adm-key').value;
@@ -208,34 +198,56 @@ window.launchAdmin = async () => {
     }
 };
         window.launchCandidate = async () => {
-            const roll = document.getElementById('inp-roll').value;
-            if(!roll) return alert("Enter Roll No.");
+    const roll = document.getElementById('inp-roll').value.trim();
+    if(!roll) return alert("Please enter your Roll Number.");
 
-            try {
-                // FIXED ERROR: signInAnonymously was failing due to Firebase Auth settings
-                const uCred = await signInAnonymously(auth);
-                userUID = uCred.user.uid;
+    try {
+        // Authenticate as a student
+        const uCred = await signInAnonymously(auth);
+        userUID = uCred.user.uid;
 
-                await setDoc(doc(db, "sessions", userUID), {
-                    roll: roll, ai_score: 0, status: "ONLINE",
-                    violations: [], override: false, submissions: []
-                });
+        // Register Student in Firestore
+        await setDoc(doc(db, "sessions", userUID), {
+            roll: roll,
+            status: "REGISTERED",
+            interviewDate: "Awaiting Assignment", // Set by Admin later
+            registrationTime: new Date().toISOString(),
+            violations: [],
+            submissions: []
+        });
 
-                document.getElementById('gate-overlay').classList.add('hidden');
-                document.getElementById('exam-portal').classList.remove('hidden');
-                document.getElementById('disp-roll-id').innerText = "ROLL: " + roll;
+        document.getElementById('gate-overlay').classList.add('hidden');
+        document.getElementById('exam-portal').classList.remove('hidden');
+        document.getElementById('disp-roll-id').innerText = "ROLL: " + roll;
 
-                initCamera();
-                initExamEngine();
-                initSecurityProtocol(); // CALL THE SECURITY SUITE
-                startGlobalListener();
-                listenForSupremeOverride();
-            } catch (err) {
-                console.error(err);
-                alert("FIREBASE AUTH ERROR: Ensure 'Anonymous Sign-in' is enabled in your Firebase Console Auth tab.");
-            }
-        };
+        // Start Listeners
+        initCamera();
+        initSecurityProtocol();
+        startGlobalListener(); 
+        
+        appendChatBubble("SYSTEM", "Registration Successful. Waiting for Admin to assign interview slot.");
+    } catch (err) {
+        console.error(err);
+        alert("Registration Error: " + err.message);
+    }
+};
+// --- ADMIN: ASSIGN INTERVIEW SLOT ---
+window.assignInterviewDate = async () => {
+    if(!activeTargetUID) return alert("Select a Candidate from the Matrix first!");
+    
+    const selectedDate = prompt("Enter Interview Date & Time (e.g., 28th April, 10:00 AM):");
+    if(!selectedDate) return;
 
+    try {
+        await updateDoc(doc(db, "sessions", activeTargetUID), {
+            interviewDate: selectedDate,
+            status: "INTERVIEW_ASSIGNED"
+        });
+        alert("Interview Schedule Updated.");
+    } catch (err) {
+        alert("Update Failed: " + err.message);
+    }
+};
         // --- SUPREME AUTHORITY MONITORING ---
         function syncSurveillanceMatrix() {
             onSnapshot(collection(db, "sessions"), (snap) => {
@@ -422,24 +434,22 @@ function initSecurityProtocol() {
 }
         // --- CANDIDATE: REAL-TIME COMMAND LISTENER ---
 function startGlobalListener() {
-    let lastProcessedQn = 0;
-
-    // Listen to the Session Document for Live Pushes
     onSnapshot(doc(db, "sessions", userUID), (snap) => {
         const data = snap.data();
-        
-        // Handle Admin Direct Intervention (Live Mode)
-        if (data.liveInjectedQuestion && data.liveInjectedQuestion.timestamp > lastProcessedQn) {
-            appendChatBubble("SUPREME ADMIN", data.liveInjectedQuestion.text);
-            lastProcessedQn = data.liveInjectedQuestion.timestamp;
-            // Play an alert sound for the candidate
-            new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
-        }
+        if(!data) return;
 
+        // Detect if Interview Date was assigned
+        if (data.interviewDate !== "Awaiting Assignment") {
+            const statusDiv = document.getElementById('proctor-logs');
+            statusDiv.innerHTML += `<div class="text-yellow-500 mt-2 font-bold uppercase tracking-tighter">
+                >> INTERVIEW ASSIGNED: ${data.interviewDate}
+            </div>`;
+        }
+        
         // Handle Disqualification
-        if (data.override === true) {
-            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20%; font-family:sans-serif;'>SESSION REVOKED BY ADMIN</h1>";
-            setTimeout(() => location.reload(), 5000);
+        if (data.override) {
+            alert("SESSION TERMINATED BY SUPREME ADMIN.");
+            location.reload();
         }
     });
 }
