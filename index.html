@@ -86,7 +86,17 @@
                     <p class="text-[9px] text-slate-500 italic mt-4 text-center">Protocol 96: Forces target candidate browser into an immediate state-refresh.</p>
                 </div>
             </div>
-
+            <div class="stat-card mt-6">
+    <h4 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">Command Mode</h4>
+    <div class="flex gap-2">
+        <button onclick="setInterviewMode('AI')" class="flex-1 bg-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-yellow-600 transition-all">ACTIVATE AI</button>
+        <button onclick="setInterviewMode('LIVE')" class="flex-1 bg-slate-800 py-3 rounded-xl text-[10px] font-bold hover:bg-red-700 transition-all">ACTIVATE LIVE</button>
+    </div>
+    <div class="mt-4">
+        <input id="live-qn-input" type="text" placeholder="Type live question..." class="w-full bg-black border border-slate-800 p-3 rounded-xl text-xs text-white mb-2">
+        <button onclick="pushLiveQuestion(activeTargetUID)" class="w-full bg-red-600 py-3 rounded-xl text-[10px] font-black">INJECT QUESTION</button>
+    </div>
+</div>
             <div class="col-span-8 glass-module p-10 rounded-[2.5rem] overflow-hidden flex flex-col">
                 <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-8">Candidate Surveillance Matrix</h3>
                 <div class="overflow-y-auto flex-1">
