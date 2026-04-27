@@ -1,6 +1,3 @@
-# SGER-2026 Supreme Command Portal X (Full Upgraded Code)
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,21 +8,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #020617;
-      color: white;
-      overflow: hidden;
-    }
-    .glass {
-      background: rgba(15,23,42,0.85);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .pulse-alert {
-      animation: pulse 1s infinite;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #020617; color: white; overflow: hidden; }
+    .glass { background: rgba(15,23,42,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+    .pulse-alert { animation: pulse 1s infinite; }
     @keyframes pulse {
       0% { box-shadow: 0 0 0 rgba(220,38,38,0.2); }
       50% { box-shadow: 0 0 20px rgba(220,38,38,0.7); }
@@ -37,7 +22,6 @@
 
 <div id="gate-overlay" class="fixed inset-0 flex items-center justify-center p-8">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-6xl">
-
     <div class="glass rounded-3xl p-10">
       <h1 class="text-4xl font-bold text-yellow-400">Candidate Access</h1>
       <div class="space-y-4 mt-8">
@@ -46,7 +30,6 @@
         <button onclick="portalAccess()" class="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold">Initiate Secure Session</button>
       </div>
     </div>
-
     <div class="glass rounded-3xl p-10">
       <h1 class="text-4xl font-bold text-red-500">Supreme Admin</h1>
       <div class="space-y-4 mt-8">
@@ -55,7 +38,6 @@
         <button onclick="launchAdmin()" class="w-full bg-red-700 text-white py-4 rounded-xl font-bold">Authorize Command Access</button>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -64,18 +46,13 @@
     <h1 class="text-2xl font-bold text-red-500">SUPREME COMMAND PORTAL</h1>
     <button onclick="location.reload()" class="bg-red-700 px-6 py-3 rounded-xl">Terminate</button>
   </header>
-
-  <main class="flex-1 grid grid-cols-12 gap-8 p-8">
-
+  <main class="flex-1 grid grid-cols-12 gap-8 p-8 overflow-hidden">
     <section class="col-span-4 space-y-6">
       <div class="glass rounded-3xl p-6">
         <input type="file" id="file-uploader" class="hidden" accept=".txt,.pdf,.docx">
-        <label for="file-uploader" class="block border-2 border-dashed p-8 text-center rounded-3xl cursor-pointer">
-          Upload Question Bank
-        </label>
+        <label for="file-uploader" class="block border-2 border-dashed p-8 text-center rounded-3xl cursor-pointer">Upload Question Bank</label>
         <div id="parse-status" class="mt-4 text-sm">Awaiting upload...</div>
       </div>
-
       <div class="glass rounded-3xl p-6">
         <h3 class="text-yellow-400 font-bold">Interview Mode</h3>
         <div class="grid grid-cols-2 gap-4 mt-4">
@@ -83,14 +60,16 @@
           <button onclick="setInterviewMode('LIVE')" class="bg-red-700 py-3 rounded-xl">LIVE Mode</button>
         </div>
         <textarea id="live-qn-input" rows="4" class="w-full mt-4 bg-black p-4 rounded-xl" placeholder="Manual Question Injection"></textarea>
-        <button onclick="pushLiveQuestion(window.activeTargetUID)" class="w-full mt-4 bg-red-700 py-4 rounded-xl">Push Question</button>
+        <button onclick="pushLiveQuestion()" class="w-full mt-4 bg-red-700 py-4 rounded-xl">Push Question</button>
+      </div>
+      <div class="glass rounded-3xl p-6">
+        <button onclick="supremeOverride()" class="w-full bg-red-800 py-4 rounded-xl pulse-alert">Cancel & Disqualify Candidate</button>
       </div>
     </section>
-
     <section class="col-span-8 glass rounded-3xl p-8 overflow-y-auto">
       <table class="w-full text-left">
         <thead>
-          <tr>
+          <tr class="border-b border-slate-700">
             <th class="p-4">Candidate</th>
             <th class="p-4">Score</th>
             <th class="p-4">Status</th>
@@ -100,207 +79,245 @@
         <tbody id="candidate-matrix-body"></tbody>
       </table>
     </section>
-
   </main>
 </div>
 
 <div id="exam-portal" class="hidden fixed inset-0 flex">
-  <aside class="w-96 bg-black p-6">
-    <video id="web-feed" autoplay playsinline class="w-full rounded-3xl"></video>
-    <div id="proctor-logs" class="mt-6 h-96 overflow-y-auto bg-slate-900 p-4 rounded-2xl text-red-400 text-xs"></div>
+  <aside class="w-96 bg-black p-6 flex flex-col">
+    <video id="web-feed" autoplay playsinline class="w-full rounded-3xl bg-slate-800"></video>
+    <div id="proctor-logs" class="mt-6 flex-1 overflow-y-auto bg-slate-900 p-4 rounded-2xl text-red-400 text-xs font-mono">
+      <div>HANDSHAKE_READY</div>
+    </div>
   </aside>
-
   <main class="flex-1 flex flex-col bg-slate-950">
     <header class="h-24 flex justify-between items-center px-10 border-b border-slate-800">
-      <h1 id="disp-roll-id" class="text-2xl text-yellow-400">SESSION_INIT</h1>
-      <div id="clock-timer" class="text-4xl font-bold">45:00</div>
+      <h1 id="disp-roll-id" class="text-2xl text-yellow-400 font-mono">SESSION_INIT</h1>
+      <div id="clock-timer" class="text-4xl font-bold font-mono text-white">45:00</div>
     </header>
-
-    <section id="interaction-box" class="flex-1 overflow-y-auto p-8 space-y-6"></section>
-
+    <section id="interaction-box" class="flex-1 overflow-y-auto p-8 space-y-4"></section>
     <footer class="p-8 border-t border-slate-800 flex gap-4">
-      <input id="candidate-input" type="text" class="flex-1 p-4 rounded-xl bg-black border border-slate-700" placeholder="Enter response...">
+      <input id="candidate-input" type="text" class="flex-1 p-4 rounded-xl bg-black border border-slate-700 text-white" placeholder="Enter response...">
       <button onclick="commitResponse()" class="bg-yellow-400 text-black px-8 rounded-xl font-bold">Submit</button>
     </footer>
   </main>
 </div>
 
-<script>
-window.activeTargetUID = null;
-window.userUID = null;
-window.interviewMode = 'AI';
-window.questionBank = [];
-window.candidateRegistry = JSON.parse(localStorage.getItem('candidateRegistry')) || {};
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-function launchAdmin() {
-  const email = document.getElementById('adm-user').value.trim();
-  const key = document.getElementById('adm-key').value.trim();
-  if (!email || !key) return alert('Admin credentials required');
-  document.getElementById('gate-overlay').classList.add('hidden');
-  document.getElementById('admin-hub').classList.remove('hidden');
-  syncSurveillanceMatrix();
-}
-
-function portalAccess() {
-  const email = document.getElementById('cand-email').value.trim();
-  const password = document.getElementById('cand-dob').value.trim();
-  if (!email.includes('@')) return alert('Valid email required');
-  if (!password) return alert('Password required');
-
-  if (!window.candidateRegistry[email]) {
-    window.candidateRegistry[email] = { password, score: 0, status: 'REGISTERED', violations: 0 };
-  } else if (window.candidateRegistry[email].password !== password) {
-    return alert('Invalid credentials');
-  }
-
-  localStorage.setItem('candidateRegistry', JSON.stringify(window.candidateRegistry));
-  window.userUID = email;
-  document.getElementById('gate-overlay').classList.add('hidden');
-  document.getElementById('exam-portal').classList.remove('hidden');
-  document.getElementById('disp-roll-id').innerText = email.toUpperCase();
-
-  initCamera();
-  initSecurityProtocol();
-  startTimer();
-  if (window.interviewMode === 'AI') deliverAIQuestion();
-}
-
-function syncSurveillanceMatrix() {
-  const body = document.getElementById('candidate-matrix-body');
-  body.innerHTML = '';
-  Object.keys(window.candidateRegistry).forEach(email => {
-    const c = window.candidateRegistry[email];
-    body.innerHTML += `
-      <tr>
-        <td class="p-4">${email}</td>
-        <td class="p-4">${c.score}%</td>
-        <td class="p-4">${c.status}</td>
-        <td class="p-4">
-          <button onclick="setTarget('${email}')">Target</button>
-        </td>
-      </tr>`;
-  });
-}
-
-function setTarget(uid) {
-  window.activeTargetUID = uid;
-  alert('TARGET LOCKED: ' + uid);
-}
-
-function setInterviewMode(mode) {
-  window.interviewMode = mode;
-  alert('MODE: ' + mode);
-}
-
-function pushLiveQuestion(uid) {
-  if (window.interviewMode !== 'LIVE') return alert('LIVE mode only');
-  if (!uid) return alert('No target selected');
-  const q = document.getElementById('live-qn-input').value.trim();
-  if (!q) return alert('Enter valid question');
-  appendChatBubble('ADMIN', q);
-}
-
-function deliverAIQuestion() {
-  if (!window.questionBank.length) return appendChatBubble('AI_SYSTEM', 'No question bank loaded');
-  const q = window.questionBank[Math.floor(Math.random() * window.questionBank.length)];
-  appendChatBubble('AI_SYSTEM', q);
-}
-
-function commitResponse() {
-  const val = document.getElementById('candidate-input').value.trim();
-  if (!val) return;
-  renderUserBubble(val);
-  document.getElementById('candidate-input').value = '';
-  const score = Math.floor(Math.random() * 25) + 75;
-  window.candidateRegistry[window.userUID].score = score;
-  localStorage.setItem('candidateRegistry', JSON.stringify(window.candidateRegistry));
-  setTimeout(() => {
-    appendChatBubble('AI_SYSTEM', 'Score: ' + score + '%');
-    if (window.interviewMode === 'AI') deliverAIQuestion();
-  }, 1000);
-}
-
-function appendChatBubble(sender, msg) {
-  const box = document.getElementById('interaction-box');
-  box.innerHTML += `<div><strong>${sender}:</strong> ${msg}</div>`;
-  box.scrollTop = box.scrollHeight;
-}
-
-function renderUserBubble(msg) {
-  const box = document.getElementById('interaction-box');
-  box.innerHTML += `<div style="text-align:right;"><strong>YOU:</strong> ${msg}</div>`;
-  box.scrollTop = box.scrollHeight;
-}
-
-function initCamera() {
-  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => document.getElementById('web-feed').srcObject = stream)
-    .catch(() => alert('Camera required'));
-}
-
-function initSecurityProtocol() {
-  window.onblur = () => {
-    document.getElementById('proctor-logs').innerHTML += '<div>SECURITY BREACH</div>';
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
+    authDomain: "placement-96094.firebaseapp.com",
+    databaseURL: "https://placement-96094-default-rtdb.firebaseio.com",
+    projectId: "placement-96094",
+    storageBucket: "placement-96094.firebasestorage.app",
+    messagingSenderId: "1061247846675",
+    appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
   };
-  document.addEventListener('contextmenu', e => e.preventDefault());
-}
 
-function startTimer() {
-  let seconds = 2700;
-  const timer = document.getElementById('clock-timer');
-  clearInterval(window.examTimer);
-  window.examTimer = setInterval(() => {
-    if (seconds <= 0) return clearInterval(window.examTimer);
-    seconds--;
-    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-    const s = String(seconds % 60).padStart(2, '0');
-    timer.innerText = `${m}:${s}`;
-  }, 1000);
-}
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-const uploader = document.getElementById('file-uploader');
-if (uploader) {
-  uploader.addEventListener('change', async function(e) {
+  // GLOBAL STATE
+  window.activeTargetUID = null;
+  window.userUID = null;
+  window.interviewMode = 'AI';
+  window.questionBank = [];
+  window.candidateRegistry = {};
+  window.adminCredentials = { email: 'admin@sger.gov', key: 'SUPREME2026' };
+
+  // FIREBASE SYNC FUNCTIONS
+  window.syncToCloud = function(email, payload) {
+    const safeId = email.replace(/\./g, '_');
+    update(ref(db, 'candidates/' + safeId), payload);
+  };
+
+  window.startHRMonitoring = function() {
+    onValue(ref(db, 'candidates'), (snapshot) => {
+      const data = snapshot.val();
+      window.candidateRegistry = data || {};
+      window.syncSurveillanceMatrix();
+    });
+  };
+
+  // Sync Question Bank from Cloud
+  onValue(ref(db, 'settings/questionBank'), (snapshot) => {
+    window.questionBank = snapshot.val() || [];
+    console.log("Question Bank Updated:", window.questionBank.length);
+  });
+
+  // EXPOSE TO GLOBAL SCOPE FOR HTML ONCLICK
+  window.portalAccess = function () {
+    const email = document.getElementById('cand-email').value.trim();
+    const password = document.getElementById('cand-dob').value.trim();
+    if (!email.includes('@') || password.length < 4) return alert('Valid credentials required');
+
+    window.userUID = email;
+    const safeId = email.replace(/\./g, '_');
+
+    // Check if exists, else create
+    onValue(ref(db, 'candidates/' + safeId), (snapshot) => {
+      const existing = snapshot.val();
+      if (existing && existing.password !== password) {
+        alert('Invalid Password');
+      } else {
+        const payload = { 
+          password: password, 
+          status: 'ACTIVE', 
+          score: existing ? existing.score : 0,
+          violations: existing ? existing.violations : 0
+        };
+        window.syncToCloud(email, payload);
+        
+        document.getElementById('gate-overlay').classList.add('hidden');
+        document.getElementById('exam-portal').classList.remove('hidden');
+        document.getElementById('disp-roll-id').innerText = email.toUpperCase();
+        
+        window.initCamera();
+        window.initSecurityProtocol();
+        window.startTimer();
+        if (window.interviewMode === 'AI') window.deliverAIQuestion();
+      }
+    }, { onlyOnce: true });
+  };
+
+  window.launchAdmin = function () {
+    const email = document.getElementById('adm-user').value.trim();
+    const key = document.getElementById('adm-key').value.trim();
+    if (email !== window.adminCredentials.email || key !== window.adminCredentials.key) {
+      return alert('Unauthorized admin access');
+    }
+    document.getElementById('gate-overlay').classList.add('hidden');
+    document.getElementById('admin-hub').classList.remove('hidden');
+    window.startHRMonitoring();
+  };
+
+  window.commitResponse = function () {
+    const input = document.getElementById('candidate-input');
+    const val = input.value.trim();
+    if (!val) return;
+
+    window.renderUserBubble(val);
+    input.value = '';
+
+    const score = Math.floor(Math.random() * 25) + 75;
+    const logEntry = { time: new Date().toLocaleTimeString(), response: val, score: score };
+    
+    // Push update to Firebase
+    const safeId = window.userUID.replace(/\./g, '_');
+    const current = window.candidateRegistry[safeId] || { logs: [] };
+    const updatedLogs = current.logs ? [...current.logs, logEntry] : [logEntry];
+    
+    window.syncToCloud(window.userUID, {
+      score: score,
+      logs: updatedLogs
+    });
+
+    setTimeout(() => {
+      window.appendChatBubble('AI_SYSTEM', 'Response Logged. Potential: ' + score + '%');
+      if (window.interviewMode === 'AI') window.deliverAIQuestion();
+    }, 1000);
+  };
+
+  window.syncSurveillanceMatrix = function () {
+    const body = document.getElementById('candidate-matrix-body');
+    body.innerHTML = '';
+    Object.keys(window.candidateRegistry).forEach((safeId) => {
+      const c = window.candidateRegistry[safeId];
+      const email = safeId.replace(/_/g, '.');
+      const row = document.createElement('tr');
+      row.className = "border-b border-slate-800 hover:bg-slate-900/50 transition";
+      row.innerHTML = `
+        <td class="p-4 font-mono text-sm">${email}</td>
+        <td class="p-4 text-yellow-400 font-bold">${c.score || 0}%</td>
+        <td class="p-4"><span class="px-2 py-1 rounded text-xs ${c.status === 'DISQUALIFIED' ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'}">${c.status}</span></td>
+        <td class="p-4"><button onclick="setTarget('${email}')" class="bg-red-700 px-3 py-1 rounded text-xs hover:bg-red-600">Target</button></td>
+      `;
+      body.appendChild(row);
+    });
+  };
+
+  window.setTarget = function(email) {
+    window.activeTargetUID = email;
+    alert("Target locked: " + email);
+  };
+
+  window.supremeOverride = function () {
+    if (!window.activeTargetUID) return alert('No candidate selected');
+    window.syncToCloud(window.activeTargetUID, { status: 'DISQUALIFIED' });
+  };
+
+  window.initSecurityProtocol = function () {
+    window.onblur = function () {
+      if (!window.userUID) return;
+      const safeId = window.userUID.replace(/\./g, '_');
+      const currentV = (window.candidateRegistry[safeId]?.violations || 0) + 1;
+      window.syncToCloud(window.userUID, { violations: currentV });
+      document.getElementById('proctor-logs').innerHTML += `<div>[${new Date().toLocaleTimeString()}] SECURITY BREACH DETECTED</div>`;
+    };
+  };
+
+  // Uploader logic to sync Question Bank to Cloud
+  const uploader = document.getElementById('file-uploader');
+  uploader.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const ext = file.name.split('.').pop().toLowerCase();
-
-    if (ext === 'txt') {
-      const text = await file.text();
-      processQuestions(text, file.name);
+    let text = "";
+    if (file.name.endsWith('.txt')) text = await file.text();
+    else if (file.name.endsWith('.docx')) {
+      const res = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+      text = res.value;
     }
-
-    else if (ext === 'docx') {
-      const arrayBuffer = await file.arrayBuffer();
-      mammoth.extractRawText({ arrayBuffer }).then(result => {
-        processQuestions(result.value, file.name);
-      });
-    }
-
-    else if (ext === 'pdf') {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        fullText += content.items.map(item => item.str).join(' ') + '\n';
-      }
-      processQuestions(fullText, file.name);
-    }
+    const questions = text.split('\n').filter(q => q.trim().length > 10);
+    set(ref(db, 'settings/questionBank'), questions);
+    document.getElementById('parse-status').innerText = `Cloud Updated: ${questions.length} Questions`;
   });
-}
 
-function processQuestions(content, fileName) {
-  window.questionBank = content
-    .split(/\r?\n/)
-    .filter(q => q.trim().length > 5);
+  // UI Utilities
+  window.appendChatBubble = (s, m) => {
+    const b = document.getElementById('interaction-box');
+    const d = document.createElement('div');
+    d.innerHTML = `<span class="text-yellow-400 font-bold">${s}:</span> <span class="text-slate-300">${m}</span>`;
+    b.appendChild(d);
+    b.scrollTop = b.scrollHeight;
+  };
 
-  document.getElementById('parse-status').innerText =
-    `${fileName} loaded | ${window.questionBank.length} questions`;
-}
+  window.renderUserBubble = (m) => {
+    const b = document.getElementById('interaction-box');
+    const d = document.createElement('div');
+    d.className = "text-right";
+    d.innerHTML = `<span class="bg-slate-800 px-4 py-2 rounded-2xl inline-block border border-slate-700">${m}</span>`;
+    b.appendChild(d);
+    b.scrollTop = b.scrollHeight;
+  };
+
+  window.deliverAIQuestion = () => {
+    if (!window.questionBank.length) return window.appendChatBubble('SYSTEM', 'Awaiting Question Bank upload...');
+    const q = window.questionBank[Math.floor(Math.random() * window.questionBank.length)];
+    window.appendChatBubble('AI_PROCTOR', q);
+  };
+
+  window.initCamera = () => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(s => { document.getElementById('web-feed').srcObject = s; })
+      .catch(() => alert('Camera access denied. Session restricted.'));
+  };
+
+  window.startTimer = () => {
+    let s = 2700;
+    const t = document.getElementById('clock-timer');
+    setInterval(() => {
+      if (s <= 0) return;
+      s--;
+      const m = String(Math.floor(s/60)).padStart(2,'0');
+      const sec = String(s%60).padStart(2,'0');
+      t.innerText = `${m}:${sec}`;
+    }, 1000);
+  };
+
+  window.setInterviewMode = (m) => { window.interviewMode = m; alert("Mode: " + m); };
+
 </script>
-
 </body>
 </html>
-```
