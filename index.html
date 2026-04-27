@@ -3,128 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Placement System | Stream Selection</title>
+    <title>InternAI | Professional Assessment</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        .glass { background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(12px); }
+    </style>
 </head>
-<body class="bg-gray-900 text-white font-sans overflow-hidden">
+<body class="bg-[#0f172a] text-slate-200 font-sans selection:bg-blue-500/30">
 
-    <div id="setup-overlay" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-6">
-        <div class="max-w-md w-full bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-2xl text-center">
-            <h1 class="text-3xl font-bold text-blue-400 mb-2">Welcome, Student</h1>
-            <p class="text-gray-400 mb-8 text-sm">Select your branch to begin the AI-driven placement cycle.</p>
+    <div id="setup-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950">
+        <div class="max-w-2xl w-full bg-slate-900 rounded-3xl p-10 border border-slate-800 shadow-2xl">
+            <div class="mb-8">
+                <h1 class="text-4xl font-extrabold text-white mb-2">Intern<span class="text-blue-500">AI</span></h1>
+                <p class="text-slate-400">Technical Assessment & AI Behavioral Interview</p>
+            </div>
             
-            <div class="grid grid-cols-1 gap-4 text-left">
-                <button onclick="initSystem('Computer Science')" class="w-full p-4 bg-gray-700 hover:bg-blue-600 rounded-xl transition-all border border-gray-600 flex items-center justify-between group">
-                    <div>
-                        <span class="block font-bold">Computer Science</span>
-                        <span class="text-xs text-gray-400 group-hover:text-blue-100">DS, Algorithms, OS</span>
-                    </div>
-                    <span class="text-2xl">💻</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="initSystem('CS')" class="p-6 bg-slate-800 hover:border-blue-500 border-2 border-transparent rounded-2xl transition-all text-left group">
+                    <div class="text-3xl mb-3">💻</div>
+                    <div class="font-bold text-white">Comp. Science</div>
+                    <div class="text-xs text-slate-500 mt-1">Fullstack, AI, Systems</div>
                 </button>
-                <button onclick="initSystem('Electronics')" class="w-full p-4 bg-gray-700 hover:bg-green-600 rounded-xl transition-all border border-gray-600 flex items-center justify-between group">
-                    <div>
-                        <span class="block font-bold">Electronics</span>
-                        <span class="text-xs text-gray-400 group-hover:text-green-100">VLSI, Signals, IoT</span>
-                    </div>
-                    <span class="text-2xl">⚡</span>
+                <button onclick="initSystem('Marketing')" class="p-6 bg-slate-800 hover:border-pink-500 border-2 border-transparent rounded-2xl transition-all text-left">
+                    <div class="text-3xl mb-3">📈</div>
+                    <div class="font-bold text-white">Marketing</div>
+                    <div class="text-xs text-slate-500 mt-1">SEO, Ads, Content</div>
                 </button>
-                <button onclick="initSystem('Mechanical')" class="w-full p-4 bg-gray-700 hover:bg-orange-600 rounded-xl transition-all border border-gray-600 flex items-center justify-between group">
-                    <div>
-                        <span class="block font-bold">Mechanical</span>
-                        <span class="text-xs text-gray-400 group-hover:text-orange-100">Thermodynamics, CAD</span>
-                    </div>
-                    <span class="text-2xl">⚙️</span>
+                <button onclick="initSystem('Design')" class="p-6 bg-slate-800 hover:border-orange-500 border-2 border-transparent rounded-2xl transition-all text-left">
+                    <div class="text-3xl mb-3">🎨</div>
+                    <div class="font-bold text-white">UI/UX Design</div>
+                    <div class="text-xs text-slate-500 mt-1">Figma, HCI, Research</div>
                 </button>
             </div>
-            <p class="mt-6 text-xs text-red-400 italic">Warning: Switching tabs during the test will trigger a flag.</p>
         </div>
     </div>
 
-    <nav class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <h1 class="text-xl font-bold text-blue-400">AI-Placement</h1>
-            <span id="current-stream" class="bg-gray-700 text-xs px-2 py-1 rounded text-gray-300"></span>
+    <nav class="h-16 px-8 flex items-center justify-between border-b border-slate-800 bg-slate-900/50 sticky top-0 z-40">
+        <div class="flex items-center gap-6">
+            <span class="text-xl font-black tracking-tighter text-white">InternAI</span>
+            <div id="timer" class="font-mono text-orange-400 bg-orange-400/10 px-3 py-1 rounded border border-orange-400/20">10:00</div>
         </div>
-        <div id="proctor-status" class="text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full">Proctoring Off</div>
+        <div class="flex items-center gap-4">
+            <div id="proctor-status" class="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-slate-400">
+                <span class="h-2 w-2 rounded-full bg-slate-600 animate-pulse"></span>
+                System Standby
+            </div>
+        </div>
     </nav>
 
-    <main class="flex h-[calc(100vh-64px)]">
-        <aside class="w-1/4 p-4 border-r border-gray-700 flex flex-col gap-4">
-            <div class="relative rounded-lg overflow-hidden bg-black aspect-video border-2 border-blue-500">
-                <video id="webcam" class="w-full h-full object-cover" autoplay playsinline></video>
+    <main class="max-w-[1600px] mx-auto grid grid-cols-12 gap-6 p-6 h-[calc(100vh-64px)]">
+        <div class="col-span-3 flex flex-col gap-6">
+            <div class="rounded-2xl overflow-hidden bg-black border border-slate-700 shadow-xl relative group">
+                <video id="webcam" class="w-full aspect-video object-cover grayscale focus:grayscale-0 transition-all" autoplay playsinline></video>
+                <div class="absolute bottom-3 left-3 bg-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Live Feed</div>
             </div>
-            <div class="bg-gray-800 p-4 rounded-lg flex-1">
-                <h3 class="text-sm font-semibold mb-2 text-gray-400">Security Logs</h3>
-                <ul id="log" class="text-[10px] space-y-1 text-red-400 font-mono"></ul>
-            </div>
-        </aside>
 
-        <section class="flex-1 p-8 overflow-y-auto">
-            <div id="stage-test" class="block">
-                <h2 id="test-title" class="text-2xl font-bold mb-4">Core Branch Test</h2>
-                <div id="question-area" class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+            <div class="flex-1 bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col">
+                <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Security Audit Log</h3>
+                <div id="log" class="flex-1 overflow-y-auto space-y-2 font-mono text-[11px]">
+                    <div class="text-blue-400">>> System integrity check passed.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-6 bg-slate-900 border border-slate-800 rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+            <div id="stage-test" class="p-8 flex flex-col h-full">
+                <div class="mb-8">
+                    <span id="role-tag" class="text-[10px] bg-blue-500/20 text-blue-400 font-bold px-3 py-1 rounded-full uppercase tracking-widest">Selection Required</span>
+                    <h2 id="test-title" class="text-3xl font-bold mt-3 text-white">Technical Assessment</h2>
+                </div>
+                
+                <div class="flex-1 space-y-6">
+                    <div class="p-6 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <p id="question-text" class="text-lg leading-relaxed text-slate-300 italic">Please select a branch to load questions...</p>
                     </div>
-                <button onclick="startInterview()" class="mt-6 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-bold">
-                    Lock Answers & Enter Interview
+                    <textarea id="mcq-answer" class="w-full h-48 bg-slate-950 border border-slate-700 rounded-2xl p-6 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none" placeholder="Type your technical explanation here..."></textarea>
+                </div>
+
+                <button onclick="startInterview()" class="mt-8 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all transform active:scale-[0.98]">
+                    Submit & Start AI Interview
                 </button>
             </div>
 
-            <div id="stage-interview" class="hidden">
-                <h2 class="text-2xl font-bold mb-4 text-purple-400">AI Adaptive Interview</h2>
-                <div id="chat-box" class="h-80 bg-gray-800 rounded-xl p-4 overflow-y-auto mb-4 space-y-4 border border-gray-700">
-                    <div class="bg-blue-900/40 p-3 rounded-lg max-w-[80%]">
-                        AI: System Initialized. Analyzing your core branch performance...
+            <div id="stage-interview" class="hidden h-full flex flex-col">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
+                    <h2 class="font-bold text-white">AI Technical Interviewer</h2>
+                    <span class="text-xs text-green-400 flex items-center gap-1">● Online</span>
+                </div>
+                
+                <div id="chat-box" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950/30">
+                    <div class="flex gap-3">
+                        <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-xs">AI</div>
+                        <div class="bg-slate-800 p-4 rounded-2xl rounded-tl-none max-w-[80%] text-sm">
+                            I've reviewed your response. Let's delve into the practical applications. How would you optimize this for a high-traffic environment?
+                        </div>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <input id="user-input" type="text" class="flex-1 bg-gray-700 border border-gray-600 rounded p-3" placeholder="Explain your answer...">
-                    <button onclick="sendAnswer()" class="bg-purple-600 px-6 py-2 rounded font-bold hover:bg-purple-500">Submit</button>
+
+                <div class="p-6 bg-slate-900 border-t border-slate-800">
+                    <div class="flex gap-4">
+                        <input id="user-input" type="text" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-5 py-3 outline-none focus:border-blue-500 transition-all" placeholder="Message InternAI...">
+                        <button onclick="sendAnswer()" class="bg-blue-600 px-6 rounded-xl hover:bg-blue-500 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
+
+        <div class="col-span-3 space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Candidate Score</h3>
+                <div class="flex items-end gap-2">
+                    <span id="score-val" class="text-5xl font-black text-white">0</span>
+                    <span class="text-slate-500 mb-1">/ 100</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2 rounded-full mt-4 overflow-hidden">
+                    <div id="score-bar" class="bg-blue-500 h-full w-0 transition-all duration-1000"></div>
+                </div>
+            </div>
+
+            <div class="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-6">
+                <h4 class="text-sm font-bold text-blue-400 mb-2">AI Tip</h4>
+                <p class="text-xs text-blue-300/80 leading-relaxed">The AI is tracking your confidence levels. Maintain eye contact with the camera and speak clearly when prompted.</p>
+            </div>
+        </div>
     </main>
 
     <script>
         let selectedStream = "";
-        const videoElement = document.getElementById('webcam');
-        const logElement = document.getElementById('log');
+        let score = 0;
+        let timeLeft = 600; // 10 Minutes
 
         const questions = {
-            "Computer Science": "Q1: Explain the time complexity of QuickSort in the worst-case scenario.",
-            "Electronics": "Q1: What is the primary difference between a BJT and a MOSFET?",
-            "Mechanical": "Q1: State the Second Law of Thermodynamics and its significance in engine design."
+            "CS": "Explain the architectural difference between Microservices and Monolithic structures. Which one is better for a scaling startup?",
+            "Marketing": "How would you reduce Customer Acquisition Cost (CAC) for a B2B SaaS product with a $500 monthly price point?",
+            "Design": "Explain the principle of 'Negative Space' and how it impacts user cognitive load in mobile app design."
         };
 
-        // Initialize System
         function initSystem(stream) {
             selectedStream = stream;
-            document.getElementById('setup-overlay').style.display = 'none';
-            document.getElementById('current-stream').innerText = stream;
-            document.getElementById('test-title').innerText = `${stream} Core Assessment`;
-            document.getElementById('question-area').innerText = questions[stream];
-            
-            // Trigger Fullscreen for strictness
-            document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen blocked"));
-            
-            startProctoring();
+            document.getElementById('setup-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('setup-overlay').style.display = 'none';
+                document.getElementById('role-tag').innerText = stream;
+                document.getElementById('question-text').innerText = questions[stream];
+                startTimer();
+                startProctoring();
+            }, 500);
         }
 
-        // Proctoring Logic
+        function startTimer() {
+            const timerDiv = document.getElementById('timer');
+            const interval = setInterval(() => {
+                let mins = Math.floor(timeLeft / 60);
+                let secs = timeLeft % 60;
+                timerDiv.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                if (timeLeft <= 0) clearInterval(interval);
+                timeLeft--;
+            }, 1000);
+        }
+
         function startProctoring() {
+            const videoElement = document.getElementById('webcam');
+            const status = document.getElementById('proctor-status');
+            
             const faceDetection = new FaceDetection({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
             });
+
             faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
             faceDetection.onResults((results) => {
-                const status = document.getElementById('proctor-status');
                 if (results.detections.length === 0) {
-                    status.innerText = "WARNING: NO FACE";
-                    status.className = "text-sm bg-red-900 text-red-300 px-3 py-1 rounded-full";
+                    status.innerHTML = `<span class="h-2 w-2 rounded-full bg-red-500"></span> FACE NOT DETECTED`;
+                    status.classList.add('text-red-400');
+                    addLog("CRITICAL: User moved away from camera");
                 } else {
-                    status.innerText = "Proctoring Active";
-                    status.className = "text-sm bg-green-900 text-green-300 px-3 py-1 rounded-full";
+                    status.innerHTML = `<span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span> Proctoring Active`;
+                    status.classList.remove('text-red-400');
                 }
             });
 
@@ -135,35 +195,64 @@
             camera.start();
         }
 
-        // Anti-Cheat
-        window.onblur = () => {
-            const li = document.createElement('li');
-            li.innerText = `[${new Date().toLocaleTimeString()}] ALERT: TAB SWITCH`;
-            logElement.appendChild(li);
-        };
+        function addLog(msg) {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = "text-red-400";
+            entry.innerText = `>> [${new Date().toLocaleTimeString()}] ${msg}`;
+            log.prepend(entry);
+        }
 
-        // Interview Flow
+        window.onblur = () => addLog("WARNING: Browser focus lost!");
+
         function startInterview() {
+            const ans = document.getElementById('mcq-answer').value;
+            if(ans.length < 10) return alert("Please provide a detailed answer.");
+            
+            score = 35; // Initial score for submitting
+            updateScore();
+            
             document.getElementById('stage-test').classList.add('hidden');
             document.getElementById('stage-interview').classList.remove('hidden');
-            
-            const chatBox = document.getElementById('chat-box');
-            setTimeout(() => {
-                chatBox.innerHTML += `<div class="bg-blue-900/40 p-3 rounded-lg max-w-[80%]">AI: Since you are a ${selectedStream} student, let's dive deeper. Can you justify your answer to the technical question?</div>`;
-            }, 1000);
+        }
+
+        function updateScore() {
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('score-bar').style.width = score + "%";
         }
 
         function sendAnswer() {
             const input = document.getElementById('user-input');
-            if(!input.value) return;
             const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML += `<div class="bg-gray-700 p-3 rounded-lg ml-auto max-w-[80%] text-right">${input.value}</div>`;
+            if(!input.value) return;
+
+            // Append User Message
+            chatBox.innerHTML += `
+                <div class="flex gap-3 justify-end">
+                    <div class="bg-blue-600 p-4 rounded-2xl rounded-tr-none max-w-[80%] text-sm text-white">
+                        ${input.value}
+                    </div>
+                </div>
+            `;
+            
             input.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
 
-        // Disable standard cheats
-        document.addEventListener('contextmenu', e => e.preventDefault());
+            // Simulate AI Response
+            setTimeout(() => {
+                score += 5;
+                updateScore();
+                chatBox.innerHTML += `
+                    <div class="flex gap-3">
+                        <div class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">AI</div>
+                        <div class="bg-slate-800 p-4 rounded-2xl rounded-tl-none max-w-[80%] text-sm">
+                            Interesting point. How does that impact the end-user experience specifically?
+                        </div>
+                    </div>
+                `;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+        }
     </script>
 </body>
 </html>
