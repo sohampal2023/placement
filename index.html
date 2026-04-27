@@ -164,18 +164,31 @@
 
     <script type="module">
        // --- PINNED LOCATION: Top of Script Imports ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, arrayUnion } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+<script type="module">
+    // --- PINNED LOCATION: START OF MODULE SCRIPT ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, arrayUnion } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    // PASTE YOUR CONFIG HERE
+    const firebaseConfig = {
+        apiKey: "AIzaSyBKqBYNRY_80b_UOLg1ls9pIKdX-Y8b3CM",
+        authDomain: "placement-96094.firebaseapp.com",
+        projectId: "placement-96094",
+        storageBucket: "placement-96094.firebasestorage.app",
+        messagingSenderId: "1061247846675",
+        appId: "1:1061247846675:web:c6885811fcf1884582b2e6"
+    };
 
-// GLOBAL VARIABLES
-let userUID = null;
-let activeTargetUID = null;
-let alertsCount = 0;
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Global Variables
+    let userUID = null;
+    let activeTargetUID = null;
+    let alertsCount = 0;
 
 // --- CRITICAL FIX: EXPOSE TO WINDOW ---
 window.launchAdmin = async () => {
