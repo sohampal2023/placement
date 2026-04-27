@@ -3,111 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SGER-2026 | Supreme Command Portal X</title>
+  <title>SGER-2026 | Supreme Command Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-    body { margin: 0; font-family: 'Space Grotesk', sans-serif; background: #020617; color: white; overflow: hidden; }
-    .glass { background: rgba(15,23,42,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-    .meeting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; height: 100%; }
-    .neon-border { border: 1px solid #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+    body { background: #020617; color: white; font-family: sans-serif; overflow: hidden; }
+    .glass { background: rgba(15,23,42,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+    .meeting-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 100%; }
+    video { width: 100%; height: 100%; object-cover: cover; border-radius: 20px; background: #000; }
   </style>
 </head>
 <body>
 
-<div id="gate-overlay" class="fixed inset-0 flex items-center justify-center p-8 z-50 bg-[#010409]">
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-5xl">
-    <div class="glass rounded-3xl p-10 border-yellow-500/20">
-      <h1 class="text-3xl font-bold text-yellow-500 mb-6">Candidate Portal</h1>
-      <input id="cand-email" type="email" placeholder="Email" class="w-full p-4 mb-4 rounded-xl bg-black border border-slate-800 outline-none">
-      <input id="cand-dob" type="password" placeholder="Password" class="w-full p-4 mb-4 rounded-xl bg-black border border-slate-800 outline-none">
-      <button onclick="portalAccess()" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-bold uppercase tracking-widest">Login</button>
-      <p id="login-msg" class="mt-4 text-xs text-center text-slate-500"></p>
+<div id="gate-overlay" class="fixed inset-0 flex items-center justify-center p-6 z-50 bg-slate-950">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-5xl">
+    <div class="glass p-10 rounded-3xl">
+      <h2 class="text-2xl font-bold text-yellow-500 mb-6">Candidate Entry</h2>
+      <input id="c-email" type="email" placeholder="Email" class="w-full p-3 mb-4 rounded bg-black border border-slate-700">
+      <input id="c-pass" type="password" placeholder="Password" class="w-full p-3 mb-4 rounded bg-black border border-slate-700">
+      <button onclick="candLogin()" class="w-full bg-yellow-500 text-black py-3 rounded font-bold">LOGIN / REGISTER</button>
+      <p id="msg" class="mt-4 text-center text-xs text-slate-400"></p>
     </div>
-    <div class="glass rounded-3xl p-10 border-red-500/20">
-      <h1 class="text-3xl font-bold text-red-600 mb-6">Supreme Admin</h1>
-      <input id="adm-user" type="email" placeholder="Admin ID" class="w-full p-4 mb-4 rounded-xl bg-black border border-slate-800 outline-none">
-      <input id="adm-key" type="password" placeholder="Key" class="w-full p-4 mb-4 rounded-xl bg-black border border-slate-800 outline-none">
-      <button onclick="launchAdmin()" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold uppercase tracking-widest">Authorize</button>
+    <div class="glass p-10 rounded-3xl">
+      <h2 class="text-2xl font-bold text-red-500 mb-6">HR Command</h2>
+      <input id="a-user" type="email" placeholder="Admin ID" class="w-full p-3 mb-4 rounded bg-black border border-slate-700">
+      <input id="a-key" type="password" placeholder="Security Key" class="w-full p-3 mb-4 rounded bg-black border border-slate-700">
+      <button onclick="adminLogin()" class="w-full bg-red-600 text-white py-3 rounded font-bold">AUTHORIZE</button>
     </div>
   </div>
 </div>
 
-<div id="admin-hub" class="hidden fixed inset-0 bg-[#010409] flex flex-col z-40">
-  <header class="h-16 glass flex justify-between items-center px-8 border-b border-white/5">
-    <h1 class="font-bold text-red-500">SGER_COMMAND_CENTER</h1>
+<div id="admin-hub" class="hidden fixed inset-0 flex flex-col z-40 bg-slate-950">
+  <header class="h-16 glass flex justify-between items-center px-10">
+    <h1 class="text-red-500 font-bold">SGER HR COMMAND</h1>
     <div class="flex gap-4">
-        <button onclick="updateMode('AI')" id="adm-ai-btn" class="px-4 py-1 rounded-lg text-xs font-bold border border-yellow-500 text-yellow-500">AI MODE</button>
-        <button onclick="updateMode('LIVE')" id="adm-live-btn" class="px-4 py-1 rounded-lg text-xs font-bold border border-red-500 text-red-500">LIVE MODE</button>
-        <button onclick="location.reload()" class="bg-red-600 px-4 py-1 rounded-lg text-xs font-bold">LOGOUT</button>
+      <button onclick="setMode('AI')" class="bg-yellow-600 px-4 py-1 rounded text-xs font-bold">AI MODE</button>
+      <button onclick="setMode('LIVE')" class="bg-red-600 px-4 py-1 rounded text-xs font-bold">LIVE MODE</button>
+      <button onclick="location.reload()" class="text-xs opacity-50 underline">LOGOUT</button>
     </div>
   </header>
-
-  <main class="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden">
-    <section id="proctor-meeting-room" class="col-span-4 glass rounded-2xl p-4 flex flex-col hidden">
-        <h3 class="text-[10px] font-bold text-red-500 mb-2 uppercase">Live Meeting: <span id="active-target-id">None</span></h3>
-        <div class="flex-1 bg-black rounded-xl relative overflow-hidden mb-4">
-            <video id="admin-remote-feed" class="w-full h-full object-cover grayscale"></video>
-            <div class="absolute bottom-4 left-4 bg-red-600 px-2 py-1 rounded text-[8px] font-bold">CANDIDATE FEED</div>
-        </div>
-        <textarea id="live-qn-input" rows="3" class="w-full bg-black p-3 rounded-xl text-xs border border-slate-800 outline-none focus:border-red-500 mb-2" placeholder="Ask something face-to-face..."></textarea>
-        <button onclick="pushLiveQuestion()" class="bg-red-600 w-full py-3 rounded-xl font-bold text-xs">PUSH LIVE QUESTION</button>
-    </section>
-
-    <section id="matrix-section" class="col-span-8 glass rounded-2xl overflow-hidden flex flex-col transition-all">
-        <div class="p-4 border-b border-white/5 flex justify-between items-center bg-slate-900/40">
-            <input type="file" id="file-uploader" class="hidden">
-            <label for="file-uploader" class="cursor-pointer text-[10px] bg-yellow-500 text-black px-4 py-2 rounded font-bold uppercase">Upload Answer Key (PDF/DOCX)</label>
-            <div id="parse-status" class="text-[10px] font-mono text-slate-400">READY</div>
-        </div>
-        <div class="flex-1 overflow-y-auto">
-            <table class="w-full text-left">
-                <thead class="text-[9px] text-slate-500 uppercase tracking-widest border-b border-white/5">
-                    <tr><th class="p-4">Candidate</th><th class="p-4">Status</th><th class="p-4">AI Score</th><th class="p-4 text-right">Actions</th></tr>
-                </thead>
-                <tbody id="matrix-body" class="text-sm divide-y divide-white/5"></tbody>
-            </table>
-        </div>
-    </section>
+  <main class="flex-1 grid grid-cols-12 gap-4 p-4">
+    <div class="col-span-4 glass rounded-2xl p-6 flex flex-col">
+      <input type="file" id="uploader" class="hidden">
+      <label for="uploader" class="block border-2 border-dashed border-slate-700 p-6 text-center rounded-xl cursor-pointer hover:border-yellow-500">
+        Upload Q&A (PDF/Word)
+      </label>
+      <div id="p-status" class="text-[10px] text-yellow-500 mt-2">Ready</div>
+      <div class="mt-6 flex-1 flex flex-col">
+        <h3 class="text-xs font-bold mb-2">LIVE INTERVIEW ROOM</h3>
+        <video id="hr-view-cand" autoplay playsinline class="flex-1 mb-4 grayscale"></video>
+        <textarea id="live-qn" placeholder="Ask Live Question..." class="w-full p-3 bg-black rounded-lg text-sm border border-slate-800"></textarea>
+        <button onclick="pushLiveQ()" class="mt-2 bg-red-600 py-2 rounded font-bold text-xs">SEND TO CANDIDATE</button>
+      </div>
+    </div>
+    <div class="col-span-8 glass rounded-2xl overflow-y-auto">
+      <table class="w-full text-left">
+        <thead class="text-xs text-slate-500 uppercase border-b border-slate-800">
+          <tr><th class="p-4">Candidate</th><th class="p-4">Status</th><th class="p-4">Score</th><th class="p-4">Action</th></tr>
+        </thead>
+        <tbody id="matrix" class="text-sm"></tbody>
+      </table>
+    </div>
   </main>
 </div>
 
-<div id="exam-portal" class="hidden fixed inset-0 bg-[#010409] flex z-30">
-  <div id="meeting-ui" class="hidden fixed inset-0 z-50 bg-black p-10 flex flex-col items-center justify-center">
-      <div class="w-full max-w-6xl h-[70vh] meeting-grid">
-          <div class="bg-slate-900 rounded-3xl overflow-hidden relative border-2 border-red-500">
-              <video id="cand-local-feed" autoplay playsinline class="w-full h-full object-cover"></video>
-              <div class="absolute top-4 left-4 bg-red-600 px-3 py-1 rounded-full text-xs font-bold animate-pulse">YOU</div>
-          </div>
-          <div class="bg-slate-900 rounded-3xl overflow-hidden relative flex items-center justify-center">
-              <div class="text-center">
-                  <div class="w-20 h-20 rounded-full bg-red-600 mx-auto mb-4 flex items-center justify-center text-2xl font-bold">HR</div>
-                  <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Interviewer Connected</p>
-              </div>
-          </div>
+<div id="exam-portal" class="hidden fixed inset-0 flex z-30 bg-slate-950">
+  <div id="live-ui" class="hidden fixed inset-0 z-50 bg-black p-10 flex flex-col">
+    <div class="meeting-container">
+      <div class="relative"><video id="c-local" autoplay playsinline></video><div class="absolute bottom-4 left-4 text-xs font-bold bg-red-600 px-2 rounded">CANDIDATE</div></div>
+      <div class="bg-slate-900 rounded-3xl flex items-center justify-center border-2 border-red-500">
+        <div class="text-center"><p class="text-red-500 font-bold mb-2 animate-pulse">HR INTERVIEWER CONNECTED</p><p class="text-xs text-slate-500">Face-to-Face Meeting Active</p></div>
       </div>
-      <div class="mt-8 w-full max-w-3xl glass p-6 rounded-3xl flex gap-4">
-          <input id="meeting-response-input" class="flex-1 bg-transparent border-b border-slate-700 outline-none p-2 text-xl" placeholder="Answer the proctor...">
-          <button onclick="commitMeetingResponse()" class="bg-red-600 px-10 py-4 rounded-2xl font-bold">SEND</button>
-      </div>
+    </div>
+    <div id="live-msg-box" class="mt-6 bg-red-900/20 p-6 rounded-2xl border border-red-500/30 text-center text-xl font-bold italic">Waiting for HR Question...</div>
   </div>
 
-  <aside class="w-72 border-r border-white/5 p-6 flex flex-col">
-      <video id="cand-exam-feed" autoplay playsinline class="w-full aspect-video rounded-xl object-cover mb-4 grayscale"></video>
-      <div class="flex-1 bg-black/50 rounded-xl p-4 font-mono text-[10px] text-red-500 overflow-y-auto" id="logs">> SESSION_SECURED</div>
-  </aside>
-  <main class="flex-1 flex flex-col relative">
-      <header class="h-20 glass flex justify-between items-center px-10">
-          <div id="cand-id-disp" class="text-yellow-500 font-bold">USER_INIT</div>
-          <div id="timer" class="text-2xl font-bold tabular-nums">45:00</div>
-      </header>
-      <section id="chat-box" class="flex-1 overflow-y-auto p-10 space-y-6 flex flex-col"></section>
-      <footer class="p-8 border-t border-white/5 flex gap-4">
-          <input id="ans-input" class="flex-1 p-4 rounded-xl bg-slate-900 outline-none focus:border-yellow-500 border border-transparent transition" placeholder="Type AI Exam Answer...">
-          <button onclick="commitAIResponse()" class="bg-yellow-500 text-black px-10 rounded-xl font-bold">SUBMIT</button>
-      </footer>
+  <aside class="w-64 border-r border-slate-800 p-4"><video id="c-exam-feed" autoplay playsinline class="rounded-xl grayscale"></video></aside>
+  <main class="flex-1 flex flex-col">
+    <header class="h-16 flex justify-between items-center px-10 border-b border-slate-800">
+      <div id="c-id" class="text-yellow-500 font-bold">INIT</div>
+      <div id="clock" class="text-xl font-bold">45:00</div>
+    </header>
+    <section id="chat" class="flex-1 overflow-y-auto p-10 space-y-4"></section>
+    <footer class="p-6 flex gap-4 border-t border-slate-800">
+      <input id="ans" class="flex-1 p-4 rounded-xl bg-black border border-slate-800 outline-none" placeholder="Enter Answer...">
+      <button onclick="sendAns()" class="bg-yellow-500 text-black px-10 rounded-xl font-bold">SUBMIT</button>
+    </footer>
   </main>
 </div>
 
@@ -128,179 +110,150 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  window.userUID = null;
-  window.activeTarget = null;
-  window.currentMode = 'AI';
-  window.fullBank = []; // Array of {q: "", a: ""}
-
-  // --- MODE CONTROL ---
-  window.updateMode = (m) => set(ref(db, 'settings/mode'), m);
-
-  onValue(ref(db, 'settings/mode'), (snap) => {
-      window.currentMode = snap.val() || 'AI';
-      const mUI = document.getElementById('meeting-ui');
-      if(mUI) window.currentMode === 'LIVE' ? mUI.classList.remove('hidden') : mUI.classList.add('hidden');
-      
-      const adminMeetingRoom = document.getElementById('proctor-meeting-room');
-      const matrix = document.getElementById('matrix-section');
-      if(adminMeetingRoom && matrix) {
-          if(window.currentMode === 'LIVE') {
-              adminMeetingRoom.classList.remove('hidden');
-              matrix.classList.replace('col-span-8', 'col-span-8'); // Visual balance
-          } else {
-              adminMeetingRoom.classList.add('hidden');
-          }
-      }
-  });
+  window.user = null;
+  window.target = null;
+  window.curQ = null;
 
   // --- HR COMMANDS ---
-  window.launchAdmin = () => {
-      const u = document.getElementById('adm-user').value;
-      const k = document.getElementById('adm-key').value;
-      if(u === 'admin@sger.gov' && k === 'SUPREME2026') {
-          document.getElementById('gate-overlay').classList.add('hidden');
-          document.getElementById('admin-hub').classList.remove('hidden');
-          window.startAdminSync();
-      }
+  window.adminLogin = () => {
+    if(document.getElementById('a-user').value === 'admin@sger.gov' && document.getElementById('a-key').value === 'SUPREME2026') {
+      document.getElementById('gate-overlay').classList.add('hidden');
+      document.getElementById('admin-hub').classList.remove('hidden');
+      syncHR();
+    } else alert("Denied");
   };
 
-  window.startAdminSync = () => {
-      onValue(ref(db, 'candidates'), (snap) => {
-          const data = snap.val() || {};
-          const body = document.getElementById('matrix-body');
-          body.innerHTML = '';
-          Object.keys(data).forEach(id => {
-              const c = data[id];
-              const email = id.replace(/_/g, '.');
-              body.innerHTML += `
-                <tr>
-                    <td class="p-4 font-bold">${email}</td>
-                    <td class="p-4"><span class="text-[10px] px-2 py-1 rounded bg-slate-800">${c.status}</span></td>
-                    <td class="p-4 font-bold text-yellow-500">${c.score || 0}%</td>
-                    <td class="p-4 text-right">
-                        <button onclick="approve('${email}')" class="bg-green-600 px-2 py-1 rounded text-[10px]">APPROVE</button>
-                        <button onclick="targetCand('${email}')" class="bg-red-600 px-2 py-1 rounded text-[10px]">MEETING</button>
-                    </td>
-                </tr>`;
-          });
+  const syncHR = () => {
+    onValue(ref(db, 'candidates'), (snap) => {
+      const data = snap.val() || {};
+      const body = document.getElementById('matrix');
+      body.innerHTML = '';
+      Object.keys(data).forEach(id => {
+        const c = data[id];
+        const email = id.replace(/_/g, '.');
+        body.innerHTML += `<tr class="border-b border-slate-900">
+          <td class="p-4">${email}</td>
+          <td class="p-4 text-xs font-bold ${c.status==='PENDING'?'text-yellow-500':'text-green-500'}">${c.status}</td>
+          <td class="p-4 font-bold text-yellow-500">${c.score || 0}%</td>
+          <td class="p-4 text-right">
+            <button onclick="approve('${email}')" class="bg-green-600 px-2 py-1 rounded text-xs">APPROVE</button>
+            <button onclick="targetUser('${email}')" class="bg-red-600 px-2 py-1 rounded text-xs ml-2">LIVE MEET</button>
+          </td>
+        </tr>`;
       });
+    });
   };
 
   window.approve = (e) => update(ref(db, `candidates/${e.replace(/\./g,'_')}`), {status: 'APPROVED'});
-  window.targetCand = (e) => { 
-      window.activeTarget = e; 
-      document.getElementById('active-target-id').innerText = e;
-  };
-
-  window.pushLiveQuestion = () => {
-      if(!window.activeTarget) return alert("Select candidate for meeting");
-      set(ref(db, `candidates/${window.activeTarget.replace(/\./g,'_')}/liveQuestion`), document.getElementById('live-qn-input').value);
-      document.getElementById('live-qn-input').value = '';
+  window.targetUser = (e) => { window.target = e; alert("Meeting Linked: " + e); };
+  window.setMode = (m) => set(ref(db, 'settings/mode'), m);
+  window.pushLiveQ = () => {
+    if(!window.target) return alert("Target a student first");
+    set(ref(db, `candidates/${window.target.replace(/\./g,'_')}/liveQ`), document.getElementById('live-qn').value);
+    document.getElementById('live-qn').value = '';
   };
 
   // --- CANDIDATE SESSION ---
-  window.portalAccess = () => {
-      const e = document.getElementById('cand-email').value.trim();
-      const p = document.getElementById('cand-dob').value.trim();
-      const safeId = e.replace(/\./g,'_');
-      
-      onValue(ref(db, `candidates/${safeId}`), (snap) => {
-          const d = snap.val();
-          if(!d) {
-              set(ref(db, `candidates/${safeId}`), {password:p, status:'PENDING', score:0});
-              document.getElementById('login-msg').innerText = "REGISTERED. AWAITING HR APPROVAL.";
-          } else {
-              if(d.status === 'PENDING') return alert("ACCESS DENIED: PENDING APPROVAL");
-              window.userUID = e;
-              document.getElementById('gate-overlay').classList.add('hidden');
-              document.getElementById('exam-portal').classList.remove('hidden');
-              document.getElementById('cand-id-disp').innerText = e.toUpperCase();
-              window.startCandidateLoop();
-          }
-      }, {onlyOnce: true});
-  };
-
-  window.startCandidateLoop = () => {
-      navigator.mediaDevices.getUserMedia({video:true}).then(s => {
-          document.getElementById('cand-exam-feed').srcObject = s;
-          document.getElementById('cand-local-feed').srcObject = s;
-      });
-      if(window.currentMode === 'AI') window.askAI();
-      
-      onValue(ref(db, `candidates/${window.userUID.replace(/\./g,'_')}/liveQuestion`), (snap) => {
-          if(snap.val() && window.currentMode === 'LIVE') {
-              alert("NEW QUESTION FROM PROCTOR: " + snap.val());
-          }
-      });
-  };
-
-  window.askAI = () => {
-      onValue(ref(db, 'settings/bank'), (snap) => {
-          const bank = snap.val() || [];
-          if(bank.length) {
-              const pair = bank[Math.floor(Math.random() * bank.length)];
-              window.currentQ = pair;
-              window.renderMsg('AI_PROCTOR', pair.q, 'system');
-          }
-      }, {onlyOnce: true});
-  };
-
-  window.commitAIResponse = () => {
-      const val = document.getElementById('ans-input').value;
-      if(!val) return;
-      window.renderMsg('YOU', val, 'user');
-      document.getElementById('ans-input').value = '';
-
-      // AI SCORE MATCHING LOGIC
-      let matchScore = 0;
-      if(window.currentQ && window.currentQ.a) {
-          const expected = window.currentQ.a.toLowerCase();
-          const actual = val.toLowerCase();
-          const keywords = expected.split(' ').filter(w => w.length > 4);
-          let hits = 0;
-          keywords.forEach(k => { if(actual.includes(k)) hits++; });
-          matchScore = Math.floor((hits / keywords.length) * 100);
+  window.candLogin = () => {
+    const email = document.getElementById('c-email').value.trim();
+    const pass = document.getElementById('c-pass').value.trim();
+    const safeId = email.replace(/\./g,'_');
+    onValue(ref(db, `candidates/${safeId}`), (snap) => {
+      const d = snap.val();
+      if(!d) {
+        set(ref(db, `candidates/${safeId}`), {password: pass, status:'PENDING', score: 0});
+        document.getElementById('msg').innerText = "REGISTERED. HR MUST APPROVE YOU.";
+      } else {
+        if(d.status === 'PENDING') return alert("PENDING APPROVAL");
+        window.user = email;
+        document.getElementById('gate-overlay').classList.add('hidden');
+        document.getElementById('exam-portal').classList.remove('hidden');
+        document.getElementById('c-id').innerText = email.toUpperCase();
+        initExam();
       }
-
-      update(ref(db, `candidates/${window.userUID.replace(/\./g,'_')}`), {score: matchScore});
-      setTimeout(window.askAI, 2000);
+    }, {onlyOnce: true});
   };
 
-  window.renderMsg = (s, m, t) => {
-      const b = document.getElementById('chat-box');
-      b.innerHTML += `<div class="${t==='user'?'self-end bg-yellow-500 text-black':'self-start bg-slate-900'} p-4 rounded-2xl max-w-[80%] text-sm">
-          <b class="text-[9px] uppercase block mb-1 opacity-50">${s}</b>${m}</div>`;
-      b.scrollTop = b.scrollHeight;
+  const initExam = () => {
+    navigator.mediaDevices.getUserMedia({video:true}).then(s => {
+      document.getElementById('c-exam-feed').srcObject = s;
+      document.getElementById('c-local').srcObject = s;
+    });
+    
+    onValue(ref(db, 'settings/mode'), (snap) => {
+      const mode = snap.val() || 'AI';
+      if(mode === 'LIVE') document.getElementById('live-ui').classList.remove('hidden');
+      else {
+        document.getElementById('live-ui').classList.add('hidden');
+        askAI();
+      }
+    });
+
+    onValue(ref(db, `candidates/${window.user.replace(/\./g,'_')}/liveQ`), (snap) => {
+      if(snap.val()) document.getElementById('live-msg-box').innerText = snap.val();
+    });
   };
 
-  // --- FILE PARSER (AI WITH ANSWERS) ---
-  const uploader = document.getElementById('file-uploader');
+  const askAI = () => {
+    onValue(ref(db, 'settings/bank'), (snap) => {
+      const bank = snap.val() || [];
+      if(bank.length) {
+        window.curQ = bank[Math.floor(Math.random() * bank.length)];
+        renderMsg('AI_PROCTOR', window.curQ.q, 'ai');
+      }
+    }, {onlyOnce: true});
+  };
+
+  window.sendAns = () => {
+    const val = document.getElementById('ans').value;
+    if(!val) return;
+    renderMsg('YOU', val, 'user');
+    document.getElementById('ans').value = '';
+
+    // Match keywords from the Hidden Answer Key
+    let score = 0;
+    if(window.curQ && window.curQ.a) {
+      const keys = window.curQ.a.toLowerCase().split(' ').filter(w => w.length > 4);
+      let hits = 0;
+      keys.forEach(k => { if(val.toLowerCase().includes(k)) hits++; });
+      score = Math.floor((hits / keys.length) * 100);
+    }
+    update(ref(db, `candidates/${window.user.replace(/\./g,'_')}`), {score: score});
+    setTimeout(askAI, 2000);
+  };
+
+  const renderMsg = (s, m, type) => {
+    const b = document.getElementById('chat');
+    b.innerHTML += `<div class="${type==='user'?'self-end bg-yellow-500 text-black':'self-start bg-slate-900'} p-4 rounded-2xl max-w-[80%]">
+      <div class="text-[9px] font-bold opacity-50 mb-1 uppercase">${s}</div>${m}</div>`;
+    b.scrollTop = b.scrollHeight;
+  };
+
+  // --- PARSER ---
+  const uploader = document.getElementById('uploader');
   uploader.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      let text = "";
-      if(file.name.endsWith('.pdf')) {
-          const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
-          for(let i=1; i<=pdf.numPages; i++) {
-              const page = await pdf.getPage(i);
-              const content = await page.getTextContent();
-              text += content.items.map(it => it.str).join(' ') + "\n";
-          }
-      } else if(file.name.endsWith('.docx')) {
-          const res = await mammoth.extractRawText({arrayBuffer: await file.arrayBuffer()});
-          text = res.value;
+    const file = e.target.files[0];
+    let text = "";
+    document.getElementById('p-status').innerText = "PARSING...";
+    if(file.name.endsWith('.pdf')) {
+      const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+      for(let i=1; i<=pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it => it.str).join(' ') + "\n";
       }
-      
-      // Smart Split: Split by "Answer:"
-      const blocks = text.split(/Question \d+:|Q\d+:/i).filter(b => b.length > 20);
-      const bank = blocks.map(b => {
-          const parts = b.split(/Answer:/i);
-          return { q: parts[0]?.trim(), a: parts[1]?.trim() };
-      });
-      
-      set(ref(db, 'settings/bank'), bank);
-      document.getElementById('parse-status').innerText = bank.length + " Q&A LOADED";
+    } else if(file.name.endsWith('.docx')) {
+      const res = await mammoth.extractRawText({arrayBuffer: await file.arrayBuffer()});
+      text = res.value;
+    }
+    const blocks = text.split(/Question:|Q\d+:/i).filter(b => b.length > 20);
+    const bank = blocks.map(b => {
+      const parts = b.split(/Answer:/i);
+      return { q: parts[0]?.trim(), a: parts[1]?.trim() };
+    });
+    set(ref(db, 'settings/bank'), bank);
+    document.getElementById('p-status').innerText = bank.length + " Q&A LOADED";
   });
-
 </script>
 </body>
 </html>
