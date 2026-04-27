@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placement Portal | Login</title>
+    <title>Placement Portal 2026</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <div class="landing-page">
         <header>
-            <h1>Placement Portal</h1>
-            <div id="notice-board">
-                <h3>🔔 Latest Updates</h3>
-                <ul id="notices-list">Loading updates...</ul>
+            <h1>Recruitment & Placement Portal</h1>
+            <div id="public-notices" class="notice-box">
+                <h3>📢 Live Updates</h3>
+                <ul id="noticeList">Loading notices...</ul>
             </div>
         </header>
 
-        <section class="login-card">
-            <h2>Login</h2>
-            <form id="loginForm">
-                <input type="email" id="email" placeholder="Email (Admin: admin@admin.com)" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button type="submit" id="loginBtn">Enter Dashboard</button>
-            </form>
-        </section>
+        <main class="login-container">
+            <div class="card">
+                <h2>System Login</h2>
+                <form id="loginForm">
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+            </div>
+        </main>
     </div>
-
     <script type="module" src="app.js"></script>
 </body>
 </html>
