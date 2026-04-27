@@ -165,71 +165,65 @@
     <script type="module">
        // --- PINNED LOCATION: Top of Script Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, arrayUnion } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-// 1. Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// 2. Define auth and db globally within this script
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Global Variables
+// GLOBAL VARIABLES
 let userUID = null;
 let activeTargetUID = null;
-// --- PINNED LOCATION: window.launchAdmin ---
+let alertsCount = 0;
+
+// --- CRITICAL FIX: EXPOSE TO WINDOW ---
 window.launchAdmin = async () => {
     const email = document.getElementById('adm-user').value.trim();
     const password = document.getElementById('adm-key').value;
-    
-    if(!email || !password) return alert("Credentials required.");
+
+    if(!email || !password) return alert("Enter Admin Credentials.");
 
     try {
-        // Use the 'auth' variable initialized above
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
         document.getElementById('gate-overlay').classList.add('hidden');
         document.getElementById('admin-hub').classList.remove('hidden');
         syncSurveillanceMatrix();
         
-        console.log("Access Granted:", userCredential.user.email);
+        console.log("Admin Authenticated:", userCredential.user.email);
     } catch (error) {
-        console.error("Auth Failure:", error.message);
+        console.error(error);
         alert("ACCESS DENIED: " + error.message);
     }
 };
-        window.launchCandidate = async () => {
+
+// --- DO THE SAME FOR CANDIDATE ---
+window.launchCandidate = async () => {
     const roll = document.getElementById('inp-roll').value.trim();
-    if(!roll) return alert("Please enter your Roll Number.");
+    if(!roll) return alert("Enter Roll No.");
 
     try {
-        // Authenticate as a student
         const uCred = await signInAnonymously(auth);
         userUID = uCred.user.uid;
 
-        // Register Student in Firestore
         await setDoc(doc(db, "sessions", userUID), {
             roll: roll,
             status: "REGISTERED",
-            interviewDate: "Awaiting Assignment", // Set by Admin later
-            registrationTime: new Date().toISOString(),
+            interviewDate: "Awaiting Assignment",
             violations: [],
-            submissions: []
+            submissions: [],
+            override: false
         });
 
         document.getElementById('gate-overlay').classList.add('hidden');
         document.getElementById('exam-portal').classList.remove('hidden');
         document.getElementById('disp-roll-id').innerText = "ROLL: " + roll;
 
-        // Start Listeners
         initCamera();
         initSecurityProtocol();
-        startGlobalListener(); 
-        
-        appendChatBubble("SYSTEM", "Registration Successful. Waiting for Admin to assign interview slot.");
+        startGlobalListener();
     } catch (err) {
-        console.error(err);
         alert("Registration Error: " + err.message);
     }
 };
