@@ -115,23 +115,21 @@
         <button onclick="pushLiveQuestion(activeTargetUID)" class="w-full bg-red-900/40 border border-red-600/50 py-3 rounded-xl text-[10px] font-black hover:bg-red-600 transition-all">PUSH TO CANDIDATE</button>
     </div>
 </div>
-            <div class="col-span-8 glass-module p-10 rounded-[2.5rem] overflow-hidden flex flex-col">
-                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-8">Candidate Surveillance Matrix</h3>
-                <div class="overflow-y-auto flex-1">
-                    <table class="w-full text-left">
-                        <thead class="text-slate-500 text-[10px] font-black uppercase border-b border-slate-800 pb-4">
-                            <tr>
-                                <th class="pb-4">Roll ID</th>
-                                <th class="pb-4 text-center">Surveillance</th>
-                                <th class="pb-4">AI Score</th>
-                                <th class="pb-4 text-right">Supreme Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="candidate-matrix-body" class="mono text-xs text-blue-300">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
+            <div class="space-y-4">
+    <input id="cand-email" type="email" placeholder="ENTER REGISTERED EMAIL" 
+           class="w-full bg-slate-900/50 border border-slate-700 p-5 rounded-2xl focus:border-yellow-500 outline-none transition-all font-bold text-white">
+    
+    <div class="relative">
+        <input id="cand-dob" type="password" placeholder="PASSWORD (DDMMYYYY)" 
+               class="w-full bg-slate-900/50 border border-slate-700 p-5 rounded-2xl focus:border-yellow-500 outline-none transition-all font-bold tracking-widest text-white">
+        <p class="text-[9px] text-slate-500 mt-2 ml-2 uppercase italic">New users: Use your preferred email and DOB to register.</p>
+    </div>
+
+    <button onclick="portalAccess()" 
+            class="w-full bg-yellow-500 text-black font-black py-5 rounded-2xl hover:bg-yellow-400 transition-all text-sm tracking-widest shadow-xl">
+        VERIFY & INITIATE SESSION
+    </button>
+</div>
         </main>
     </div>
 
@@ -211,7 +209,57 @@ window.setTarget = (uid) => {
     window.activeTargetUID = uid; 
     alert("Target Locked: " + uid); 
 };
+// --- PINNED LOCATION: window.portalAccess ---
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
+window.portalAccess = async () => {
+    const email = document.getElementById('cand-email').value.trim();
+    const password = document.getElementById('cand-dob').value; // DOB as password
+
+    if (!email || !password) return alert("Email and DOB (DDMMYYYY) required.");
+
+    try {
+        // 1. Attempt to Login
+        let uCred;
+        try {
+            uCred = await signInWithEmailAndPassword(auth, email, password);
+            console.log("Existing Candidate Logged In");
+        } catch (err) {
+            // 2. If User not found, Register them
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                uCred = await createUserWithEmailAndPassword(auth, email, password);
+                console.log("New Candidate Registered");
+            } else {
+                throw err;
+            }
+        }
+
+        window.userUID = uCred.user.uid;
+
+        // 3. Initialize/Update Session in Firestore
+        await setDoc(doc(db, "sessions", window.userUID), {
+            email: email,
+            status: "LOGGED_IN",
+            lastActive: new Date().toISOString(),
+            violations: [],
+            submissions: []
+        }, { merge: true });
+
+        // 4. UI Transition
+        document.getElementById('gate-overlay').classList.add('hidden');
+        document.getElementById('exam-portal').classList.remove('hidden');
+        document.getElementById('disp-roll-id').innerText = "ID: " + email.split('@')[0].toUpperCase();
+
+        // 5. Start Systems
+        initCamera();
+        initSecurityProtocol();
+        startGlobalListener();
+
+    } catch (error) {
+        console.error(error);
+        alert("ACCESS ERROR: " + error.message);
+    }
+};
 // --- CRITICAL FIX: EXPOSE TO WINDOW ---
 window.launchAdmin = async () => {
     const email = document.getElementById('adm-user').value.trim();
